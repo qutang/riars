@@ -1,0 +1,11 @@
+#step-check-service {
+    display: flex;
+    justify-content: space-between;
+    margin: 0 auto;
+    margin-top: 100px;
+}
+
+#step-check-service > button, #step-check-service > span {
+    display: block;
+    margin: 0 10px;
+}
