@@ -1,0 +1,9 @@
+.steps-container {
+    margin-bottom: 16px;
+    border: 1px solid #e8e8e8;
+    height: 80vh;
+}
+  
+.steps-action {
+    margin-top: 24px;
+}

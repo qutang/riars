@@ -1,0 +1,13 @@
+#step-select-sensors {
+    margin: 0 auto;
+    margin-top: 30vh;
+}
+
+#step-select-sensors button {
+    margin: 1em auto;
+    display: block;
+}
+
+.spinner-select-sensors {
+    margin: 1em auto;
+}

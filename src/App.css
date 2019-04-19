@@ -1,4 +1,8 @@
-.App {
-    margin: 1rem;
-    font-family: Arial, Helvetica, sans-serif;
+.app-container {
+    width: 90%;
+    margin: 30px auto;
+}
+
+.debug-drawer {
+    float:right;
 }
