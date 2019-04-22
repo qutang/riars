@@ -8,8 +8,6 @@ class SelectSensors extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            selectedSensorAddresses: [],
-            candidateSensorAddresses: [],
             scanning: false
         }
     }
@@ -19,28 +17,30 @@ class SelectSensors extends React.Component {
             scanning: true
         })
         setTimeout(() => {
+            this.props.scanSensors();
             this.setState({
-                candidateSensorAddresses: [
-                    'sensor A', 'sensor B', 'sensor C'
-                ],
                 scanning: false
             })
         }, 2000);
     }
 
     handleSelectChange(checkedList) {
-        this.setState({
-            selectedSensorAddresses: checkedList
-        })
         this.props.onSubmit(checkedList);
     }
 
     render() {
         return (
             <div id='step-select-sensors'>
-                <Button type='primary' onClick={() => this.handleScan()} loading={this.state.scanning}>Scan nearby devices</Button>
+                <Button type='primary'
+                    onClick={this.handleScan.bind(this)}
+                    loading={this.state.scanning}>
+                    Scan nearby devices
+                </Button>
                 <div className='list-select-sensors'>
-                    <CheckboxGroup options={this.state.candidateSensorAddresses} value={this.state.selectedSensorAddresses} onChange={(checkedList) => this.handleSelectChange(checkedList)} />
+                    <CheckboxGroup
+                        options={this.props.availableSensorAddresses}
+                        value={this.props.selectedSensorAddresses}
+                        onChange={this.handleSelectChange.bind(this)} />
                 </div>
             </div >
         )

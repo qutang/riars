@@ -1,0 +1,16 @@
+#step-setup-processor {
+    width: 90%;
+    margin: 0 auto;
+}
+
+#step-setup-processor h3 {
+    margin: 15px auto;
+}
+
+.select-a-processor {
+    width: 100%;
+}
+
+.select-processor-input {
+    width: 100%;
+}

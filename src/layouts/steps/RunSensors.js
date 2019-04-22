@@ -1,0 +1,61 @@
+import React, { Component } from 'react';
+import { Button } from 'antd';
+import SensorMonitor from '../../components/SensorMonitor';
+import SensorTable from '../../components/SensorTable';
+import './RunSensors.css';
+
+class RunSensors extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            submitting: false,
+            stopping: false
+        }
+    }
+
+    handleRun() {
+        this.setState({
+            submitting: true
+        });
+        setTimeout(() => {
+            this.props.runSensors();
+            this.setState({
+                submitting: false
+            })
+        }, 2000);
+    }
+
+    handleStop() {
+        this.setState({
+            stopping: true
+        });
+        setTimeout(() => {
+            this.props.stopSensors();
+            this.setState({
+                stopping: false
+            })
+        }, 2000);
+    }
+
+    render() {
+        const selectedSensors = this.props.selectedSensors;
+        return (
+            <div id='step-run-sensors'>
+                <Button type='primary' loading={this.state.submitting} onClick={this.handleRun.bind(this)}>Submit settings and run sensors</Button>
+                <Button loading={this.state.stopping} onClick={this.handleStop.bind(this)}>Stop sensors</Button>
+                <div className='sensor-monitors'>
+                    {
+                        selectedSensors.map((sensor) => {
+                            return (
+                                <SensorMonitor sensor={sensor} />
+                            )
+                        })
+                    }
+                </div>
+
+            </div>
+        )
+    }
+}
+
+export default RunSensors;

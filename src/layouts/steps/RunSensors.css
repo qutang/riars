@@ -1,0 +1,25 @@
+#step-run-sensors {
+    width: 90%;
+    margin: 0 auto;
+}
+
+.sensor-monitors {
+    display: flex;
+    justify-content: space-around;
+    margin: 15px auto;
+}
+
+.sensor-monitor {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.sensor-monitor-control {
+    text-align: center;
+}
+
+.sensor-monitor-display {
+    text-align: center;
+    margin: 15px auto;
+}

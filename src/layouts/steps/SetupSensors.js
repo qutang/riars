@@ -1,50 +1,51 @@
 import { log } from "util";
 
 import React, { Component } from 'react';
-import { Slider, Input, Button } from 'antd';
+import { Slider, InputNumber, Button, Select } from 'antd';
+import SensorSetting from '../../components/SensorSetting';
 import './SetupSensors.css';
 
 class SetupSensors extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {
-            samplingRate: 50,
-            dynamicRange: 8
-        }
     }
 
     render() {
-        console.log(this.props.selectedSensors);
+        console.log(this.props.selectedSensors.map((sensor) => sensor.address));
         return (
             <div id='step-setup-sensors'>
-                <h4>Sampling Rate</h4>
+                <h3>Sampling Rate</h3>
                 <Slider
-                    defaultValue={this.state.samplingRate}
+                    onChange={this.props.changeAccelerometerSamplingRate}
+                    tooltipVisible
+                    defaultValue={this.props.samplingRate}
                     max={100}
                     min={10}
                     step={10}
                     tipFormatter={(value) => {
                         return `${value} Hz`
                     }} />
-                <h4>Dynamic range</h4>
+                <h3>Dynamic range</h3>
                 <Slider
-                    defaultValue={this.state.dynamicRange}
+                    onChange={this.props.changeAccelerometerDynamicRange}
+                    tooltipVisible
+                    defaultValue={this.props.dynamicRange}
                     max={16}
                     min={2}
                     step={1}
                     tipFormatter={(value) => {
                         return `${value} g`
                     }} />
-                {
-                    this.props.selectedSensors.map((address) => {
-                        return (
-                            <div>
-                                <h4>{address}</h4>
-
-                            </div>
-                        )
-                    })
-                }
+                <div className='setup-sensors-each'>
+                    {
+                        this.props.selectedSensors.map((sensor) => {
+                            return (
+                                <SensorSetting key={sensor.address} sensor={sensor} changeSensorPlacement={this.props.changeSensorPlacement} changeSensorPort={this.props.changeSensorPort}
+                                    defaultPort={this.props.defaultPort}></SensorSetting>
+                            )
+                        })
+                    }
+                </div>
             </div>
         )
     }

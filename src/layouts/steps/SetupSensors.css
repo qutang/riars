@@ -1,4 +1,14 @@
 #step-setup-sensors {
     width: 80%;
+    height: 70vh;
     margin: 0 auto;
+    overflow-y: auto;
+}
+
+#step-setup-sensors h3 {
+    margin: 20px auto;
+}
+
+.choose-placement {
+    width: 100%;
 }
