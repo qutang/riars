@@ -1,0 +1,18 @@
+.user-prediction-monitor {
+    display: flex;
+    flex-direction: row;
+}
+
+.past-prediction {
+    flex: 1;
+}
+
+.current-prediction {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.prediction-tag {
+    display: block;
+}

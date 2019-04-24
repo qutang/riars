@@ -1,4 +1,9 @@
 .steps-content {
-    display: flex;
-    align-items: center;
+    margin: 10px auto;
+    overflow: auto;
+    width: 100%;
+}
+
+.step-header {
+    border-bottom: 1px solid #e8e8e8;
 }

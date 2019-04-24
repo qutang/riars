@@ -4,7 +4,11 @@
 }
 
 #step-setup-processor h3 {
-    margin: 15px auto;
+    margin: 15px auto 5px auto;
+}
+
+#step-setup-processor p {
+    margin: 0 auto 10px auto;
 }
 
 .select-a-processor {

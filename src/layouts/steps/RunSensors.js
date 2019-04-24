@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { Button } from 'antd';
 import SensorMonitor from '../../components/SensorMonitor';
-import SensorTable from '../../components/SensorTable';
 import './RunSensors.css';
 
 class RunSensors extends React.Component {
@@ -41,8 +40,10 @@ class RunSensors extends React.Component {
         const selectedSensors = this.props.selectedSensors;
         return (
             <div id='step-run-sensors'>
-                <Button type='primary' loading={this.state.submitting} onClick={this.handleRun.bind(this)}>Submit settings and run sensors</Button>
-                <Button loading={this.state.stopping} onClick={this.handleStop.bind(this)}>Stop sensors</Button>
+                <div className='run-sensors-control'>
+                    <Button type='primary' loading={this.state.submitting} onClick={this.handleRun.bind(this)}>Submit settings and run sensors</Button>
+                    <Button loading={this.state.stopping} onClick={this.handleStop.bind(this)}>Stop sensors</Button>
+                </div>
                 <div className='sensor-monitors'>
                     {
                         selectedSensors.map((sensor) => {
@@ -52,7 +53,6 @@ class RunSensors extends React.Component {
                         })
                     }
                 </div>
-
             </div>
         )
     }

@@ -2,12 +2,14 @@ class Sensor {
     constructor(address) {
         this._address = address
         this._port = undefined
-        this._host = undefined
+        this._host = 'localhost'
         this._samplingRate = undefined
         this._dynamicRange = undefined
         this._name = undefined
         this._status = 'stopped'
         this._order = undefined
+        this._selected = false
+        this._errorCode = undefined
     }
 
     static get PREDEFINED_PLACEMENTS() {
@@ -20,6 +22,15 @@ class Sensor {
             'NDA': 'Nondominant ankle (NDA)',
             'NDH': 'Nondominant hip (NDH)'
         }
+    }
+
+    static find(address, sensors) {
+        const foundSensor = sensors.filter((sensor) => sensor.address == address)[0]
+        return foundSensor;
+    }
+
+    get url() {
+        return 'ws://' + this._host + ":" + this._port;
     }
 
     get address() {
@@ -54,6 +65,14 @@ class Sensor {
         return this._order
     }
 
+    get selected() {
+        return this._selected
+    }
+
+    get errorCode() {
+        return this._errorCode
+    }
+
     set address(address) {
         this._address = address
     }
@@ -86,7 +105,20 @@ class Sensor {
         this._order = order
     }
 
-    toJSON() {
+    set selected(selected) {
+        this._selected = selected
+    }
+
+    set errorCode(error) {
+        this._errorCode = error
+    }
+
+    toTable() {
+        let { selected, order, address, name, host, port, samplingRate, dynamicRange, status, errorCode } = this;
+        return { selected, order, address, name, host, port, samplingRate, dynamicRange, status, errorCode }
+    }
+
+    toJSONRequest() {
         let { order, address, name, host, port, samplingRate, dynamicRange, status } = this;
         return { order, address, name, host, port, samplingRate, dynamicRange, status }
     }

@@ -1,6 +1,7 @@
 #step-select-sensors {
     margin: 0 auto;
-    margin-top: 30vh;
+    margin-top: 30px;
+    width: 95%;
 }
 
 #step-select-sensors button {
@@ -10,4 +11,34 @@
 
 .spinner-select-sensors {
     margin: 1em auto;
+}
+
+.list-select-sensors {
+    margin: 2em auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+}
+
+.setup-sensors {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.shared-sensor-settings {
+    width: 30%;
+}
+
+.individual-sensor-settings {
+    flex: 1;
+    margin-left: 20px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+}
+
+.setup-a-sensor{
+    width: 33%;
+    margin-right: 10px;
 }

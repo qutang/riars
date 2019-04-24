@@ -1,4 +1,12 @@
 #step-create-subject {
     margin: 0 auto;
-    margin-top: 30vh;
+    margin-top: 30px;
+    width: 60%;
+    display: flex;
+    justify-content: space-between;
+}
+
+#step-create-subject > button, #step-create-subject > span {
+    display: block;
+    margin: 0 10px;
 }

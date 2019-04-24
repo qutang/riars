@@ -32,7 +32,13 @@ class Guide extends React.Component {
         const { current } = this.state;
         return (
             <div>
-                <StepContent className='steps-container' title={this.props.steps[current].title} subTitle={this.props.steps[current].subTitle} description={this.props.steps[current].description}>
+                <StepContent
+                    className='steps-container'
+                    title={this.props.steps[current].title}
+                    subTitle={this.props.steps[current].subTitle}
+                    sensors={this.props.sensors}
+                    processors={this.props.processors}
+                    description={this.props.steps[current].description}>
                     {this.props.steps[current].content}
                 </StepContent>
                 <Steps current={current}>

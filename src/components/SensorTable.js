@@ -12,7 +12,8 @@ class SensorTable extends React.Component {
             const data = {
                 key: String(index)
             }
-            const sensorObj = sensor.toJSON()
+            const sensorObj = sensor.toTable()
+            sensorObj.selected = String(sensorObj.selected);
             const result = { ...data, ...sensorObj }
             return result
         });
@@ -20,7 +21,7 @@ class SensorTable extends React.Component {
     }
 
     initColumns(sensor) {
-        const sensorObj = sensor.toJSON();
+        const sensorObj = sensor.toTable();
         const keys = Object.keys(sensorObj);
         const result = keys.map((key) => {
             return {
