@@ -29,6 +29,20 @@ class Sensor {
         return foundSensor;
     }
 
+    clone() {
+        const sensor = new Sensor(this.address);
+        sensor.selected = this.selected;
+        sensor.name = this.name;
+        sensor.port = this.port;
+        sensor.host = this.host;
+        sensor.samplingRate = this.samplingRate;
+        sensor.dynamicRange = this.dynamicRange;
+        sensor.status = this.status;
+        sensor.order = this.order;
+        sensor.errorCode = this.errorCode;
+        return sensor;
+    }
+
     get url() {
         return 'ws://' + this._host + ":" + this._port;
     }

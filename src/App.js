@@ -20,10 +20,8 @@ class App extends React.Component {
         super(props);
         this.state = {
             currentSubject: undefined,
-            selectedSensors: [],
-            availableSensorAddresses: [],
-            selectedProcessor: undefined,
-            availableProcessorNames: [],
+            sensors: [],
+            processors: [],
             apiServicePort: '5000',
             apiServiceProtocol: 'http://',
             apiServiceHost: 'localhost',
@@ -32,7 +30,6 @@ class App extends React.Component {
             sensorDefaultPort: 8000,
             predictions: [new Prediction([{ label: 'Walking', score: 0.3 }, { label: 'Sitting', score: 0.6 }, { label: 'Lying', score: 0.2 }]), new Prediction([{ label: 'Walking', score: 0.3 }, { label: 'Sitting', score: 0.6 }, { label: 'Lying', score: 0.2 }]), new Prediction([{ label: 'Walking', score: 0.2 }, { label: 'Sitting', score: 0.7 }, { label: 'Lying', score: 0.3 }])]
         }
-        console.log(this.state.predictions);
     }
 
     checkApiService(url) {
@@ -50,175 +47,239 @@ class App extends React.Component {
     }
 
     scanSensors() {
-        const selectedAddresses = [];
-        if (this.state.selectSensors !== undefined) {
-            selectedAddresses = this.state.selectSensors.map((sensor) => sensor.address);
+        const scannedSensorAddresses = ['Sensor A', 'Sensor B', 'Sensor C'];
+        const currentSensors = this.state.sensors;
+        let updatedSensors = [];
+        if (currentSensors.length > 0) {
+            const newSensorAddrs = scannedSensorAddresses.filter((address) => Sensor.find(address, currentSensors).length == 0);
+            const newSensors = newSensorAddrs.map((addr) => new Sensor(addr));
+            updatedSensors = [...currentSensors, ...newSensors];
+        } else {
+            updatedSensors = scannedSensorAddresses.map((addr) => new Sensor(addr));
         }
-        const scannedSensorAddresses = ['Sensor A', 'Sensor B', 'Sensor C']
-        const availableSensorAddresses = [...new Set([...selectedAddresses, ...scannedSensorAddresses])]
+
+        updatedSensors = updatedSensors.map((sensor, index) => {
+            sensor.order = index;
+            return sensor;
+        })
+
         this.setState(
             {
-                availableSensorAddresses: availableSensorAddresses
+                sensors: updatedSensors
             }
         )
         message.success('Finished scanning nearby sensors')
     }
 
     selectSensors(selectedAddresses) {
-        const selectedSensors = selectedAddresses.map((address, index) => {
-            const sensor = new Sensor(address);
-            sensor.dynamicRange = this.state.accelerometerDynamicRange;
-            sensor.samplingRate = this.state.accelerometerSamplingRate;
-            sensor.order = index;
-            sensor.port = this.state.sensorDefaultPort + index;
-            sensor.status = 'stopped';
-            return sensor;
+        console.log(selectedAddresses);
+        const sensors = this.state.sensors;
+        const updatedSensors = sensors.map((sensor) => {
+            if (selectedAddresses.indexOf(sensor.address) != -1) {
+                sensor.selected = true
+            } else {
+                sensor.selected = false
+            }
+            return sensor.clone();
         });
         this.setState({
-            selectedSensors: selectedSensors
+            sensors: updatedSensors
         });
         message.success('Selected: ' + selectedAddresses.join(','));
     }
 
     changeAccelerometerSamplingRate(samplingRate) {
-        const updatedSensors = this.state.selectedSensors.map((sensor) => {
+        const updatedSensors = this.state.sensors.map((sensor) => {
             sensor.samplingRate = samplingRate;
-            return sensor;
+            return sensor.clone();
         });
         this.setState({
             accelerometerSamplingRate: samplingRate,
-            selectedSensors: updatedSensors
+            sensors: updatedSensors
         });
-        message.success('Updated sampling rate for selected sensors');
+        message.success('Updated sampling rate for sensors');
     }
 
     changeAccelerometerDynamicRange(dynamicRange) {
-        const updatedSensors = this.state.selectedSensors.map((sensor) => {
+        const updatedSensors = this.state.sensors.map((sensor) => {
             sensor.dynamicRange = dynamicRange;
-            return sensor;
+            return sensor.clone();
         });
         this.setState({
             accelerometerDynamicRange: dynamicRange,
-            selectedSensors: updatedSensors
+            sensors: updatedSensors
         });
-        message.success('Updated dynamic range for selected sensors');
+        message.success('Updated dynamic range for sensors');
     }
 
     changeSensorPlacement(address, value) {
-        const updatedSensors = this.state.selectedSensors.map((sensor) => {
+        const updatedSensors = this.state.sensors.map((sensor) => {
             if (sensor.address == address) {
                 sensor.name = value;
             }
-            return sensor;
+            return sensor.clone();
         });
         this.setState({
-            selectedSensors: updatedSensors
+            sensors: updatedSensors
         });
     }
 
     changeSensorPort(address, value) {
-        const updatedSensors = this.state.selectedSensors.map((sensor) => {
+        const updatedSensors = this.state.sensors.map((sensor) => {
             if (sensor.address == address) {
                 sensor.port = value;
             }
-            return sensor;
+            return sensor.clone();
         });
         this.setState({
-            selectedSensors: updatedSensors
+            sensors: updatedSensors
         });
     }
 
     runSensors() {
         console.log('running sensors');
-        const updatedSensors = this.state.selectedSensors.map((sensor) => {
-            sensor.status = 'running';
-            return sensor;
+        const updatedSensors = this.state.sensors.map((sensor) => {
+            if (sensor.selected) {
+                sensor.status = 'running';
+            }
+            return sensor.clone();
         });
         this.setState({
-            selectedSensors: updatedSensors
+            sensors: updatedSensors
         });
     }
 
     stopSensors() {
         console.log('stopping sensors');
-        const updatedSensors = this.state.selectedSensors.map((sensor) => {
-            sensor.status = 'stopped';
-            return sensor;
+        const updatedSensors = this.state.sensors.map((sensor) => {
+            if (sensor.selected) {
+                sensor.status = 'stopped';
+            }
+            return sensor.clone();
         });
         this.setState({
-            selectedSensors: updatedSensors
+            sensors: updatedSensors
         });
     }
 
     queryProcessors() {
+        const existingProcessors = this.state.processors;
+        let newProcessors = [new Processor('activity-model'), new Processor('posture-model')];
+        newProcessors = newProcessors.filter((processor) =>
+            !Processor.find(processor.name, existingProcessors)
+        );
+        const updatedProcessors = [...existingProcessors, ...newProcessors];
+        console.log(updatedProcessors);
         this.setState({
-            availableProcessorNames: ['activity-model', 'posture-model']
+            processors: updatedProcessors
         });
     }
 
     selectProcessor(name) {
-        const selectedProcessor = new Processor(name);
+        const processors = this.state.processors;
+        const updatedProcessors = processors.map((processor) => {
+            if (name == processor.name) {
+                processor.selected = true;
+            } else {
+                processor.selected = false;
+            }
+            return processor.clone();
+        })
         this.setState({
-            selectedProcessor: selectedProcessor
+            processors: updatedProcessors
         });
     }
 
     changeProcessorWindowSize(value) {
-        const updatedProcessor = Processor.copy(this.state.selectedProcessor);
-        updatedProcessor.windowSize = value;
+        const processors = this.state.processors;
+        const updatedProcessors = processors.map((processor) => {
+            if (processor.selected) {
+                processor.windowSize = value;
+            }
+            return processor.clone();
+        })
         this.setState({
-            selectedProcessor: updatedProcessor
+            processors: updatedProcessors
         });
     }
 
     changeProcessorUpdateRate(value) {
-        const updatedProcessor = Processor.copy(this.state.selectedProcessor);
-        updatedProcessor.updateRate = value;
+        const processors = this.state.processors;
+        const updatedProcessors = processors.map((processor) => {
+            if (processor.selected) {
+                processor.updateRate = value;
+            }
+            return processor.clone();
+        })
         this.setState({
-            selectedProcessor: updatedProcessor
+            processors: updatedProcessors
         });
     }
 
     changeProcessorInputs(inputUrls) {
-        console.log(inputUrls);
-        const updatedProcessor = Processor.copy(this.state.selectedProcessor);
-        updatedProcessor.inputUrls = inputUrls;
+        const processors = this.state.processors;
+        const updatedProcessors = processors.map((processor) => {
+            if (processor.selected) {
+                processor.inputUrls = inputUrls;
+            }
+            return processor.clone();
+        })
         this.setState({
-            selectedProcessor: updatedProcessor
+            processors: updatedProcessors
         });
     }
 
     changeProcessorNumberOfWindows(value) {
-        const updatedProcessor = Processor.copy(this.state.selectedProcessor);
-        updatedProcessor.numberOfWindows = value;
+        const processors = this.state.processors;
+        const updatedProcessors = processors.map((processor) => {
+            if (processor.selected) {
+                processor.numberOfWindows = value;
+            }
+            return processor.clone();
+        })
         this.setState({
-            selectedProcessor: updatedProcessor
+            processors: updatedProcessors
         });
     }
 
     changeProcessorPort(value) {
-        const updatedProcessor = Processor.copy(this.state.selectedProcessor);
-        updatedProcessor.port = value;
+        const processors = this.state.processors;
+        const updatedProcessors = processors.map((processor) => {
+            if (processor.selected) {
+                processor.port = value;
+            }
+            return processor.clone();
+        })
         this.setState({
-            selectedProcessor: updatedProcessor
+            processors: updatedProcessors
         });
     }
 
     runProcessor() {
         console.log('running processor');
-        const updatedProcessor = Processor.copy(this.state.selectedProcessor);
-        updatedProcessor.status = 'running'
+        const processors = this.state.processors;
+        const updatedProcessors = processors.map((processor) => {
+            if (processor.selected) {
+                processor.status = 'running';
+            }
+            return processor.clone();
+        })
         this.setState({
-            selectedProcessor: updatedProcessor
+            processors: updatedProcessors
         });
     }
 
     stopProcessor() {
         console.log('stopping processor');
-        const updatedProcessor = Processor.copy(this.state.selectedProcessor);
-        updatedProcessor.status = 'stopped';
+        const processors = this.state.processors;
+        const updatedProcessors = processors.map((processor) => {
+            if (processor.selected) {
+                processor.status = 'stopped';
+            }
+            return processor.clone();
+        })
         this.setState({
-            selectedProcessor: updatedProcessor
+            processors: updatedProcessors
         });
     }
 
@@ -242,12 +303,11 @@ class App extends React.Component {
             subTitle: 'scan and select nearby devices',
             description: 'Scan to discover more nearby available sensors, and check sensor list to select them. Sensor settings will be displayed on the right panel once a sensor is selected. You may set up shared parameters for sensors on the left panel.',
             content: <SelectSensors onSubmit={this.selectSensors.bind(this)}
+                sensors={this.state.sensors}
                 availableSensorAddresses={this.state.availableSensorAddresses}
-                selectedSensors={this.state.selectedSensors}
                 samplingRate={this.state.accelerometerSamplingRate}
                 dynamicRange={this.state.accelerometerDynamicRange}
                 defaultPort={this.state.sensorDefaultPort}
-                selectedSensorAddresses={this.state.selectedSensors.map((sensor) => sensor.address)}
                 changeAccelerometerSamplingRate={this.changeAccelerometerSamplingRate.bind(this)}
                 changeAccelerometerDynamicRange={this.changeAccelerometerDynamicRange.bind(this)}
                 changeSensorPlacement={this.changeSensorPlacement.bind(this)}
@@ -259,16 +319,21 @@ class App extends React.Component {
             title: 'Run and monitor sensors',
             subTitle: 'Submit settings, run and monitor sensors',
             description: 'Review sensor settings using the "Sensors" Tab, click "Submit settings and run sensors" to submit the settings to API server and start running the sensors. Click "Stop sensors" to stop the running of all sensors. You may check the monitor panel below to display the signal of the raw sensor data after you click "Connect" button to connect to the sensor\'s output signal.',
-            content: <RunSensors runSensors={this.runSensors.bind(this)} stopSensors={this.stopSensors.bind(this)} selectedSensors={this.state.selectedSensors} />,
-            validateNext: () => null,
+            content: <RunSensors runSensors={this.runSensors.bind(this)} stopSensors={this.stopSensors.bind(this)} sensors={this.state.sensors} />,
+            validateNext: () => {
+                console.log('step 4 -> step 5');
+                this.queryProcessors();
+            },
             validateBack: () => null
         }, {
             title: 'Setup model',
             subTitle: 'setup model and activity recognition task',
             description: 'Use the following form to setup a processor, as explained by each item. The settings of all processors may be reviewed using the "Processors" tab.',
-            content: <SetupProcessor sensors={this.state.selectedSensors} processorNames={this.state.availableProcessorNames}
-                selectedProcessor={this.state.selectedProcessor}
-                defaultWindowSize={this.state.selectedProcessor ? this.state.selectedProcessor.windowSize || 12.8 : 12.8} selectProcessor={this.selectProcessor.bind(this)} changeProcessorWindowSize={this.changeProcessorWindowSize.bind(this)}
+            content: <SetupProcessor
+                sensors={this.state.sensors}
+                processors={this.state.processors}
+                selectProcessor={this.selectProcessor.bind(this)}
+                changeProcessorWindowSize={this.changeProcessorWindowSize.bind(this)}
                 changeProcessorUpdateRate={this.changeProcessorUpdateRate.bind(this)}
                 changeProcessorInputs={this.changeProcessorInputs.bind(this)}
                 changeProcessorNumberOfWindows={this.changeProcessorNumberOfWindows.bind(this)}
@@ -286,7 +351,7 @@ class App extends React.Component {
         return (
             <div className='app-container' >
                 <h2><Icon type="experiment" theme="twoTone" twoToneColor="#1890ff" /><span style={{ color: "#1890ff", fontFamily: "sans-serif" }}>RIAR</span> <small>experiment platform</small></h2>
-                <Guide steps={steps} sensors={this.state.selectedSensors} processors={this.state.selectedProcessor ? [this.state.selectedProcessor] : []} />
+                <Guide steps={steps} sensors={this.state.sensors} processors={this.state.processors} />
                 {/* <DebugDrawer /> */}
             </div >
         )

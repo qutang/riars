@@ -37,7 +37,7 @@ class RunSensors extends React.Component {
     }
 
     render() {
-        const selectedSensors = this.props.selectedSensors;
+        const sensors = this.props.sensors;
         return (
             <div id='step-run-sensors'>
                 <div className='run-sensors-control'>
@@ -46,9 +46,9 @@ class RunSensors extends React.Component {
                 </div>
                 <div className='sensor-monitors'>
                     {
-                        selectedSensors.map((sensor) => {
+                        sensors.map((sensor) => {
                             return (
-                                <SensorMonitor sensor={sensor} />
+                                sensor.selected && <SensorMonitor key={sensor.address} sensor={sensor} />
                             )
                         })
                     }

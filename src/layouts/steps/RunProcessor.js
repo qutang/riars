@@ -37,7 +37,6 @@ class RunProcessor extends React.Component {
     }
 
     render() {
-        const selectedProcessor = this.props.selectedProcessor;
         return (
             <div id='step-run-processor'>
                 <div className='run-processor-control'>

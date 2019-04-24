@@ -6,6 +6,7 @@ import Sensor from '../models/Sensor';
 class SensorSetting extends React.Component {
     constructor(props) {
         super(props)
+
     }
 
     handlePlacementChange(value) {
@@ -18,10 +19,16 @@ class SensorSetting extends React.Component {
         this.props.changeSensorPort(address, value);
     }
 
+    componentDidMount() {
+        this.handlePortChange(this.port);
+        this.handlePlacementChange(this.props.sensor.name);
+    }
+
     render() {
         const sensor = this.props.sensor;
         const Option = Select.Option;
         const predefinedPlacements = Sensor.PREDEFINED_PLACEMENTS;
+        this.port = this.props.defaultPort + this.props.sensor.order;
         return (
             <div className='setup-a-sensor'>
                 <h3>{sensor.address}</h3>
@@ -44,7 +51,7 @@ class SensorSetting extends React.Component {
                     }
                 </Select>
                 <h5>Select port</h5>
-                <InputNumber min={8000} max={8100} defaultValue={this.props.defaultPort + sensor.order} onChange={this.handlePortChange.bind(this)} />
+                <InputNumber min={8000} max={8100} defaultValue={this.port} onChange={this.handlePortChange.bind(this)} />
             </div>
         )
     }

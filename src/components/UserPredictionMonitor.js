@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Tag, Badge } from 'antd';
+import PredictionTag from './PredictionTag';
 import './UserPredictionMonitor.css';
 
 
@@ -8,14 +9,13 @@ class UserPredictionMonitor extends React.Component {
         super(props);
     }
 
-    correctLabel() {
-
+    correctLabel(index, label) {
+        this.props.correctPredictionLabel(index, label);
     }
 
     renderCurrentPrediction() {
         const currentPrediction = this.props.predictions[this.props.predictions.length - 1]
-        const topN = currentPrediction.immutablePrediction;
-        return this._renderPrediction(topN, false, currentPrediction.duration, 1);
+        return this._renderPrediction(currentPrediction, false, 1);
     }
 
     renderPastPredictions(n) {
@@ -23,24 +23,21 @@ class UserPredictionMonitor extends React.Component {
         const stopIndex = this.props.predictions.length - 1;
         const pastPredictions = this.props.predictions.slice(startIndex, stopIndex);
         return pastPredictions.map((prediction, index) => {
-            const predictionSet = prediction.immutablePrediction;
-            const tags = this._renderPrediction(predictionSet, true, prediction.duration, this.props.predictions.length - index);
+            const tags = this._renderPrediction(prediction, true, this.props.predictions.length - index);
             return <div key={index} className={'past-prediction'}>
                 {tags}
             </div>
         })
     }
 
-    _renderPrediction(predictionSet, past = true, duration, pastIndex) {
-        const displayTime = Math.round(duration * pastIndex * 10.0) / 10.0;
+    _renderPrediction(prediction, past = true, pastIndex) {
+        const displayTime = Math.round(prediction.duration * pastIndex * 10.0) / 10.0;
+        const predictionSet = prediction.immutablePrediction;
         return (
             <div>
                 <h3>{displayTime + ' seconds ago'}</h3>
-                {predictionSet.map((prediction) => {
-                    return (
-                        <Tag key={prediction.label} className='prediction-tag' color={past ? "#bfbfbf" : "#108ee9"} style={{ opacity: prediction.score, fontSize: "1.5em", padding: "0.5em", color: past ? 'black' : 'white', fontWeight: "bold" }} onchange={this.correctLabel.bind(this)
-                        }> <Badge color="red" />{prediction.label}</Tag >
-                    )
+                {predictionSet.map((pr) => {
+                    return <PredictionTag key={pr.label} pr={pr} past={past} correctLabel={this.correctLabel.bind(this)} prediction={prediction} />
                 })}
             </div>
         )

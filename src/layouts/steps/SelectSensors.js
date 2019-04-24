@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Button, Checkbox, Spin, Slider, InputNumber, Select } from 'antd';
 import './SelectSensors.css';
 import SensorSetting from '../../components/SensorSetting';
+import SharedSensorSetting from '../../components/SharedSensorSetting';
 
 const CheckboxGroup = Checkbox.Group;
 
@@ -26,10 +27,23 @@ class SelectSensors extends React.Component {
     }
 
     handleSelectChange(checkedList) {
+        console.log(checkedList);
         this.props.onSubmit(checkedList);
     }
 
     render() {
+        const sensorOptions = this.props.sensors.map((sensor) => {
+            return {
+                label: sensor.address,
+                value: sensor.address
+            }
+        }
+        );
+        const defaultOptions = this.props.sensors.filter((sensor) => sensor.selected).map((sensor) => {
+            return sensor.address
+        });
+
+        console.log(defaultOptions);
         return (
             <div id='step-select-sensors'>
                 <Button type='primary'
@@ -39,41 +53,19 @@ class SelectSensors extends React.Component {
                 </Button>
                 <div className='list-select-sensors'>
                     <CheckboxGroup
-                        options={this.props.availableSensorAddresses}
-                        value={this.props.selectedSensorAddresses}
+                        options={sensorOptions}
+                        defaultValue={defaultOptions}
                         onChange={this.handleSelectChange.bind(this)} />
                 </div>
                 <div className='setup-sensors'>
                     <div className='shared-sensor-settings'>
-                        <h3>Shared sensor settings</h3>
-                        <h4>Accelerometer sampling rate</h4>
-                        <Slider
-                            onChange={this.props.changeAccelerometerSamplingRate}
-                            tooltipVisible
-                            defaultValue={this.props.samplingRate}
-                            max={100}
-                            min={10}
-                            step={10}
-                            tipFormatter={(value) => {
-                                return `${value} Hz`
-                            }} />
-                        <h4>Accelerometer dynamic range</h4>
-                        <Slider
-                            onChange={this.props.changeAccelerometerDynamicRange}
-                            tooltipVisible
-                            defaultValue={this.props.dynamicRange}
-                            max={16}
-                            min={2}
-                            step={1}
-                            tipFormatter={(value) => {
-                                return `${value} g`
-                            }} />
+                        {this.props.sensors.length > 0 && <SharedSensorSetting changeAccelerometerSamplingRate={this.props.changeAccelerometerSamplingRate} changeAccelerometerDynamicRange={this.props.changeAccelerometerDynamicRange} samplingRate={this.props.samplingRate} dynamicRange={this.props.dynamicRange} />}
                     </div>
                     <div className='individual-sensor-settings'>
                         {
-                            this.props.selectedSensors.map((sensor) => {
+                            this.props.sensors.map((sensor) => {
                                 return (
-                                    <SensorSetting key={sensor.address} sensor={sensor} changeSensorPlacement={this.props.changeSensorPlacement} changeSensorPort={this.props.changeSensorPort}
+                                    sensor.selected && <SensorSetting key={sensor.address} sensor={sensor} changeSensorPlacement={this.props.changeSensorPlacement} changeSensorPort={this.props.changeSensorPort}
                                         defaultPort={this.props.defaultPort}></SensorSetting>
                                 )
                             })

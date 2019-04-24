@@ -15,6 +15,7 @@ class ProcessorTable extends React.Component {
             const processorObj = processor.toJSON();
             console.log(processorObj);
             processorObj.inputUrls = processorObj.inputUrls.join(', ');
+            processorObj.selected = String(processorObj.selected);
             const result = { ...data, ...processorObj }
             return result
         });

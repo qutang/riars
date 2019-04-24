@@ -1,25 +1,42 @@
 class Processor {
     constructor(name) {
         this._name = name
-        this._port = undefined
-        this._host = undefined
-        this._updateRate = undefined
-        this._windowSize = undefined
-        this._numberOfWindows = undefined
+        this._port = 9000
+        this._host = 'localhost'
+        this._updateRate = 12.8
+        this._windowSize = 12.8
+        this._numberOfWindows = 0
         this._status = 'stopped'
         this._inputUrls = []
+        this._selected = false
     }
 
-    static copy(theOtherProcessor) {
-        const newProcessor = new Processor(theOtherProcessor.name);
-        newProcessor.port = theOtherProcessor.port;
-        newProcessor.host = theOtherProcessor.host;
-        newProcessor.updateRate = theOtherProcessor.updateRate;
-        newProcessor.windowSize = theOtherProcessor.windowSize;
-        newProcessor.status = theOtherProcessor.status;
-        newProcessor.numberOfWindows = theOtherProcessor.numberOfWindows;
-        newProcessor.inputUrls = theOtherProcessor.inputUrls.slice(0);
+    clone() {
+        const newProcessor = new Processor(this.name);
+        newProcessor.port = this.port;
+        newProcessor.host = this.host;
+        newProcessor.updateRate = this.updateRate;
+        newProcessor.windowSize = this.windowSize;
+        newProcessor.status = this.status;
+        newProcessor.numberOfWindows = this.numberOfWindows;
+        newProcessor.inputUrls = this.inputUrls.slice(0);
+        newProcessor.selected = this.selected;
         return newProcessor;
+    }
+
+    static find(name, processors) {
+        const result = processors.filter((processor) => {
+            return processor.name == name
+        });
+        if (result.length > 0) {
+            return result[0]
+        } else {
+            return false
+        }
+    }
+
+    get selected() {
+        return this._selected;
     }
 
     get name() {
@@ -55,6 +72,10 @@ class Processor {
         return this._inputUrls
     }
 
+    set selected(selected) {
+        this._selected = selected;
+    }
+
     set name(name) {
         this._name = name
     }
@@ -88,8 +109,8 @@ class Processor {
     }
 
     toJSON() {
-        let { name, host, port, updateRate, windowSize, numberOfWindows, inputUrls, status } = this;
-        return { name, host, port, updateRate, windowSize, numberOfWindows, inputUrls, status }
+        let { selected, name, host, port, updateRate, windowSize, numberOfWindows, inputUrls, status } = this;
+        return { selected, name, host, port, updateRate, windowSize, numberOfWindows, inputUrls, status }
     }
 }
 

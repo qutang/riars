@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Checkbox, Tooltip, Button, Empty } from 'antd';
+import { Checkbox, Tooltip, Button, Empty, Badge } from 'antd';
 import { Line } from 'react-chartjs';
 import Sensor from '../models/Sensor';
 
@@ -161,8 +161,8 @@ class SensorMonitor extends React.Component {
         return (
             <div className='sensor-monitor'>
                 <div className='sensor-monitor-control'>
-                    <Tooltip title={sensor.address + "\n" + sensor.url}>
-                        <Checkbox checked={this.state.showing} onChange={this.toggleMonitor.bind(this)}>{predefinedPlacements[sensor.name]}</Checkbox>
+                    <Tooltip title={sensor.address + ", " + sensor.url + ', ' + sensor.status}>
+                        <Checkbox checked={this.state.showing} onChange={this.toggleMonitor.bind(this)}><Badge color={sensor.status == 'running' ? 'green' : 'red'} />{predefinedPlacements[sensor.name]}</Checkbox>
                     </Tooltip>
                     <Button size="small" onClick={this.connectMonitor.bind(this)}>{
                         this.state.connected ? "Disconnect" : 'Connect'
