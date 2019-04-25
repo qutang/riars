@@ -38,6 +38,8 @@ class Guide extends React.Component {
                     subTitle={this.props.steps[current].subTitle}
                     sensors={this.props.sensors}
                     processors={this.props.processors}
+                    service={this.props.service}
+                    updateService={this.props.updateService}
                     description={this.props.steps[current].description}>
                     {this.props.steps[current].content}
                 </StepContent>

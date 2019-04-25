@@ -13,6 +13,7 @@ import RunProcessor from './layouts/steps/RunProcessor';
 import Sensor from './models/Sensor';
 import Processor from './models/Processor';
 import Prediction from './models/Prediction';
+import ApiService from './models/ApiService';
 import DebugDrawer from './components/DebugDrawer';
 
 class App extends React.Component {
@@ -22,6 +23,7 @@ class App extends React.Component {
             currentSubject: undefined,
             sensors: [],
             processors: [],
+            apiService: new ApiService(),
             apiServicePort: '5000',
             apiServiceProtocol: 'http://',
             apiServiceHost: 'localhost',
@@ -32,13 +34,33 @@ class App extends React.Component {
         }
     }
 
-    checkApiService(url) {
+    updateService(protocol, host, port) {
+        const service = this.state.apiService.clone();
+        service.protocol = protocol;
+        service.host = host;
+        service.port = port;
         this.setState({
-            apiServiceHost: url
+            apiService: service
         });
-        const apiUrl = this.state.apiServiceProtocol + this.state.apiServiceHost + ":" + this.state.apiServicePort;
-        this.queryProcessors();
-        message.success(apiUrl + " is available");
+    }
+
+    checkApiService() {
+        setInterval(() => {
+            const app = this;
+            this.state.apiService.checkAvailable((success) => {
+                console.log(success);
+                const service = this.state.apiService.clone();
+                service.status = (success ? 'running' : 'stopped');
+                this.setState({
+                    apiService: service
+                });
+            });
+            console.log('checked api');
+        }, 5000);
+    }
+
+    componentDidMount() {
+        this.checkApiService();
     }
 
     createSubject(subjectId) {
@@ -283,12 +305,41 @@ class App extends React.Component {
         });
     }
 
+    correctLabel(index, label) {
+        console.log(index)
+        console.log(label)
+        const predictions = this.state.predictions;
+        const updatedPredictions = predictions.map((prediction, i) => {
+            if (index == i) {
+                prediction.correction = label;
+            }
+            return prediction.clone();
+        })
+        this.setState({
+            predictions: updatedPredictions
+        });
+        console.log(this.state.predictions)
+    }
+
+    addPredictionNote(index, note) {
+        const predictions = this.state.predictions;
+        const updatedPredictions = predictions.map((prediction, i) => {
+            if (index == i) {
+                prediction.correctionNote = note;
+            }
+            return prediction.clone();
+        })
+        this.setState({
+            predictions: updatedPredictions
+        });
+    }
+
     render() {
         const steps = [{
             title: 'Check API service',
             subTitle: 'check if RIARS service is up',
             description: "Input the server address (IP or webserver name) and click 'Check availability' to check if the API server is running correctly.",
-            content: <CheckService api_protocol={this.state.apiServiceProtocol} api_port={this.state.apiServicePort} api_host={this.state.apiServiceHost} onCheckService={this.checkApiService.bind(this)} />,
+            content: <CheckService api_protocol={this.state.apiService.protocol} api_port={this.state.apiService.port} api_host={this.state.apiService.host} onCheckService={this.checkApiService.bind(this)} />,
             validateNext: () => null,
             validateBack: () => null
         }, {
@@ -344,14 +395,19 @@ class App extends React.Component {
             title: 'Run and monitor',
             subTitle: 'start experiment session',
             description: 'Use the "Processors" tab to review the settings of different processors and confirm the selected processor. Click "Submit settings and run the processor" to start running the processor and generate predictions. Click "Stop the processor" to stop the running processor. On the left monitor panel, you may see the visualization display that is optimized for experts; on the right monitor panel, you may see the visualization display shown to the subject (novice user).',
-            content: <RunProcessor runProcessor={this.runProcessor.bind(this)} stopProcessor={this.stopProcessor.bind(this)} selectedProcessor={this.state.selectedProcessor} predictions={this.state.predictions} />,
+            content: <RunProcessor runProcessor={this.runProcessor.bind(this)} stopProcessor={this.stopProcessor.bind(this)} selectedProcessor={this.state.selectedProcessor} predictions={this.state.predictions} correctLabel={this.correctLabel.bind(this)} addPredictionNote={this.addPredictionNote.bind(this)} />,
             validateNext: () => null,
             validateBack: () => null
         }];
         return (
             <div className='app-container' >
                 <h2><Icon type="experiment" theme="twoTone" twoToneColor="#1890ff" /><span style={{ color: "#1890ff", fontFamily: "sans-serif" }}>RIAR</span> <small>experiment platform</small></h2>
-                <Guide steps={steps} sensors={this.state.sensors} processors={this.state.processors} />
+                <Guide
+                    steps={steps}
+                    sensors={this.state.sensors}
+                    processors={this.state.processors}
+                    service={this.state.apiService}
+                    updateService={this.updateService.bind(this)} />
                 {/* <DebugDrawer /> */}
             </div >
         )

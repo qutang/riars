@@ -5,14 +5,25 @@
 
 .past-prediction {
     flex: 1;
+    margin-left: 5px;
 }
 
 .current-prediction {
     display: flex;
     flex-direction: column;
     flex: 1;
+    margin-left: 5px;
 }
 
 .prediction-tag {
     display: block;
+    width: 100%;
+}
+
+.prediction-tag > div {
+    width: 100%;
+}
+
+.prediction-note {
+    margin-bottom: 5px;
 }

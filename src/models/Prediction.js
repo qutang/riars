@@ -7,6 +7,23 @@ class Prediction {
         this._stopTime = this._startTime.clone();
         this._stopTime.add(12.8, 's');
         this._correction = undefined;
+        this._correctionNote = undefined;
+    }
+
+    clone() {
+        const predictionSet = this.immutablePrediction
+        const clonedPredictionSet = predictionSet.map((pr) => {
+            return {
+                label: pr.label,
+                score: pr.score
+            }
+        });
+        const newPrediction = new Prediction(clonedPredictionSet);
+        newPrediction.startTime = this.startTime;
+        newPrediction.stopTime = this.stopTime;
+        newPrediction.correction = this.correction;
+        newPrediction.correctionNote = this.correctionNote;
+        return newPrediction;
     }
 
     getPredictionByLabel(label) {
@@ -31,16 +48,32 @@ class Prediction {
         this._correction = correctLabel;
     }
 
+    set correctionNote(correctNote) {
+        this._correctionNote = correctNote;
+    }
+
     get correction() {
         return this._correction;
+    }
+
+    get correctionNote() {
+        return this._correctionNote;
     }
 
     get startTime() {
         return this._startTime
     }
 
+    set startTime(value) {
+        this._startTime = value
+    }
+
     get stopTime() {
         return this._stopTime
+    }
+
+    set stopTime(value) {
+        this._stopTime = value
     }
 
     get scores() {

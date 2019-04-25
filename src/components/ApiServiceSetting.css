@@ -1,0 +1,7 @@
+.api-service-setting {
+    width: 400px;
+}
+
+.api-service-setting input.service-host-setting {
+    width: 50%;
+}
