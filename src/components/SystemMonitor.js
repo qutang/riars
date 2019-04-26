@@ -13,8 +13,6 @@ class SystemMonitor extends React.Component {
         const TabPane = Tabs.TabPane;
         const sensors = this.props.sensors;
         const processors = this.props.processors;
-        console.log(sensors);
-        console.log(processors);
         return (
             <Tabs tabPosition='left'>
                 <TabPane tab="Instruction" key="instruction">{this.props.children}</TabPane>

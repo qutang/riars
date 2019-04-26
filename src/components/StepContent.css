@@ -7,3 +7,13 @@
 .step-header {
     border-bottom: 1px solid #e8e8e8;
 }
+
+.step-header-extra {
+    display: flex;
+    justify-content: space-around;
+}
+
+.step-header-extra > *{
+    margin-right: 10px;
+    
+}

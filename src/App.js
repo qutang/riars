@@ -1,12 +1,10 @@
 import React, { Component } from "react";
-import { Tag, Icon } from 'antd';
+import { Icon } from 'antd';
 import { hot } from 'react-hot-loader';
 import Guide from './layouts/Guide';
 import './App.css';
 import { message } from 'antd';
-import CreateSubject from './layouts/steps/CreateSubject';
 import SelectSensors from './layouts/steps/SelectSensors';
-import CheckService from './layouts/steps/CheckService';
 import RunSensors from './layouts/steps/RunSensors';
 import SetupProcessor from './layouts/steps/SetupProcessor';
 import RunProcessor from './layouts/steps/RunProcessor';
@@ -14,6 +12,8 @@ import Sensor from './models/Sensor';
 import Processor from './models/Processor';
 import Prediction from './models/Prediction';
 import ApiService from './models/ApiService';
+import Subject from './models/Subject';
+import { version } from '../package.json';
 import DebugDrawer from './components/DebugDrawer';
 
 class App extends React.Component {
@@ -24,12 +24,10 @@ class App extends React.Component {
             sensors: [],
             processors: [],
             apiService: new ApiService(),
-            apiServicePort: '5000',
-            apiServiceProtocol: 'http://',
-            apiServiceHost: 'localhost',
+            subjects: [],
+            isScanningSensors: false,
             accelerometerSamplingRate: 50,
             accelerometerDynamicRange: 8,
-            sensorDefaultPort: 8000,
             predictions: [new Prediction([{ label: 'Walking', score: 0.3 }, { label: 'Sitting', score: 0.6 }, { label: 'Lying', score: 0.2 }]), new Prediction([{ label: 'Walking', score: 0.3 }, { label: 'Sitting', score: 0.6 }, { label: 'Lying', score: 0.2 }]), new Prediction([{ label: 'Walking', score: 0.2 }, { label: 'Sitting', score: 0.7 }, { label: 'Lying', score: 0.3 }])]
         }
     }
@@ -45,56 +43,101 @@ class App extends React.Component {
     }
 
     checkApiService() {
-        setInterval(() => {
-            const app = this;
-            this.state.apiService.checkAvailable((success) => {
-                console.log(success);
-                const service = this.state.apiService.clone();
-                service.status = (success ? 'running' : 'stopped');
-                this.setState({
-                    apiService: service
-                });
+        this.state.apiService.checkAvailable((success) => {
+            const service = this.state.apiService.clone();
+            service.status = (success ? 'running' : 'stopped');
+            this.setState({
+                apiService: service
             });
-            console.log('checked api');
-        }, 5000);
+            if (success) {
+                this.querySubjects();
+            }
+        });
     }
 
     componentDidMount() {
         this.checkApiService();
+        setInterval(() => {
+            this.checkApiService();
+        }, 1000 * 10);
     }
 
-    createSubject(subjectId) {
-        this.setState({ currentSubject: subjectId });
-        message.success('Created ' + subjectId);
+    querySubjects() {
+        this.state.apiService.querySubjects((subjects, status) => {
+            this.setState({
+                subjects: subjects
+            });
+            if (status == 200) {
+
+            } else {
+
+            }
+        });
+    }
+
+    selectSubject(subjectId) {
+        const subjects = this.state.subjects;
+        const selectedSubj = subjects.filter((s) => s.id == subjectId)[0];
+        this.state.apiService.selectSubject(selectedSubj, (updatedSubj, status) => {
+            const updatedSubjects = subjects.map((subject) => {
+                if (updatedSubj.id == subject.id) {
+                    subject.selected = updatedSubj.selected
+                } else {
+                    subject.selected = false
+                }
+                return subject.clone()
+            });
+            this.setState({
+                subjects: updatedSubjects
+            });
+            if (status != 200) {
+                message.error('Subject id is not found on the server');
+            } else {
+                message.success('Selected subject: ' + updatedSubj.id);
+            }
+        });
+    }
+
+    createSubject(subjJson) {
+        const newSubject = Subject.fromJSON(subjJson);
+        this.state.apiService.createSubject(newSubject, (newSubject, status) => {
+            if (status == 200) {
+                const subjects = this.state.subjects;
+                subjects.push(newSubject);
+                const updatedSubjects = subjects.map((subject) => {
+                    if (newSubject.id == subject.id) {
+                        subject.selected = newSubject.selected
+                    } else {
+                        subject.selected = false
+                    }
+                    return subject.clone()
+                })
+                this.setState({
+                    subjects: updatedSubjects
+                });
+            } else {
+                message('Failed to create new subject: ' + status);
+            }
+        });
     }
 
     scanSensors() {
-        const scannedSensorAddresses = ['Sensor A', 'Sensor B', 'Sensor C'];
-        const currentSensors = this.state.sensors;
-        let updatedSensors = [];
-        if (currentSensors.length > 0) {
-            const newSensorAddrs = scannedSensorAddresses.filter((address) => Sensor.find(address, currentSensors).length == 0);
-            const newSensors = newSensorAddrs.map((addr) => new Sensor(addr));
-            updatedSensors = [...currentSensors, ...newSensors];
-        } else {
-            updatedSensors = scannedSensorAddresses.map((addr) => new Sensor(addr));
-        }
-
-        updatedSensors = updatedSensors.map((sensor, index) => {
-            sensor.order = index;
-            return sensor;
+        this.setState({
+            isScanningSensors: true
         })
-
-        this.setState(
-            {
-                sensors: updatedSensors
+        this.state.apiService.scanSensors((sensors, status) => {
+            if (status == 200) {
+                this.setState({
+                    sensors: sensors,
+                    isScanningSensors: false
+                });
+            } else {
+                message.error('Failed to scan sensors');
             }
-        )
-        message.success('Finished scanning nearby sensors')
+        });
     }
 
     selectSensors(selectedAddresses) {
-        console.log(selectedAddresses);
         const sensors = this.state.sensors;
         const updatedSensors = sensors.map((sensor) => {
             if (selectedAddresses.indexOf(sensor.address) != -1) {
@@ -159,7 +202,6 @@ class App extends React.Component {
     }
 
     runSensors() {
-        console.log('running sensors');
         const updatedSensors = this.state.sensors.map((sensor) => {
             if (sensor.selected) {
                 sensor.status = 'running';
@@ -172,7 +214,6 @@ class App extends React.Component {
     }
 
     stopSensors() {
-        console.log('stopping sensors');
         const updatedSensors = this.state.sensors.map((sensor) => {
             if (sensor.selected) {
                 sensor.status = 'stopped';
@@ -191,7 +232,6 @@ class App extends React.Component {
             !Processor.find(processor.name, existingProcessors)
         );
         const updatedProcessors = [...existingProcessors, ...newProcessors];
-        console.log(updatedProcessors);
         this.setState({
             processors: updatedProcessors
         });
@@ -278,7 +318,6 @@ class App extends React.Component {
     }
 
     runProcessor() {
-        console.log('running processor');
         const processors = this.state.processors;
         const updatedProcessors = processors.map((processor) => {
             if (processor.selected) {
@@ -292,7 +331,6 @@ class App extends React.Component {
     }
 
     stopProcessor() {
-        console.log('stopping processor');
         const processors = this.state.processors;
         const updatedProcessors = processors.map((processor) => {
             if (processor.selected) {
@@ -306,8 +344,6 @@ class App extends React.Component {
     }
 
     correctLabel(index, label) {
-        console.log(index)
-        console.log(label)
         const predictions = this.state.predictions;
         const updatedPredictions = predictions.map((prediction, i) => {
             if (index == i) {
@@ -318,7 +354,6 @@ class App extends React.Component {
         this.setState({
             predictions: updatedPredictions
         });
-        console.log(this.state.predictions)
     }
 
     addPredictionNote(index, note) {
@@ -336,29 +371,14 @@ class App extends React.Component {
 
     render() {
         const steps = [{
-            title: 'Check API service',
-            subTitle: 'check if RIARS service is up',
-            description: "Input the server address (IP or webserver name) and click 'Check availability' to check if the API server is running correctly.",
-            content: <CheckService api_protocol={this.state.apiService.protocol} api_port={this.state.apiService.port} api_host={this.state.apiService.host} onCheckService={this.checkApiService.bind(this)} />,
-            validateNext: () => null,
-            validateBack: () => null
-        }, {
-            title: 'Create subject',
-            subTitle: 'set subject id',
-            description: "Type in a subject ID and click 'Create' to create a subject folder for data logging on the API server. Hover over the '!' icon to see the required naming pattern for the subject ID.",
-            content: <CreateSubject pattern='RIAR_##' onCreate={this.createSubject.bind(this)} />,
-            validateNext: () => null,
-            validateBack: () => null
-        }, {
-            title: 'Select sensors',
-            subTitle: 'scan and select nearby devices',
+            title: 'Setup sensors',
+            subTitle: 'Select and setup nearby sensors',
             description: 'Scan to discover more nearby available sensors, and check sensor list to select them. Sensor settings will be displayed on the right panel once a sensor is selected. You may set up shared parameters for sensors on the left panel.',
             content: <SelectSensors onSubmit={this.selectSensors.bind(this)}
                 sensors={this.state.sensors}
-                availableSensorAddresses={this.state.availableSensorAddresses}
+                isScanningSensors={this.state.isScanningSensors}
                 samplingRate={this.state.accelerometerSamplingRate}
                 dynamicRange={this.state.accelerometerDynamicRange}
-                defaultPort={this.state.sensorDefaultPort}
                 changeAccelerometerSamplingRate={this.changeAccelerometerSamplingRate.bind(this)}
                 changeAccelerometerDynamicRange={this.changeAccelerometerDynamicRange.bind(this)}
                 changeSensorPlacement={this.changeSensorPlacement.bind(this)}
@@ -401,13 +421,16 @@ class App extends React.Component {
         }];
         return (
             <div className='app-container' >
-                <h2><Icon type="experiment" theme="twoTone" twoToneColor="#1890ff" /><span style={{ color: "#1890ff", fontFamily: "sans-serif" }}>RIAR</span> <small>experiment platform</small></h2>
+                <h2><Icon type="experiment" theme="twoTone" twoToneColor="#1890ff" /><span style={{ color: "#1890ff", fontFamily: "sans-serif" }}>RIAR</span> <small>experiment platform <code style={{ fontSize: "0.8em", color: "#cf1322" }}>{version}</code></small></h2>
                 <Guide
                     steps={steps}
                     sensors={this.state.sensors}
                     processors={this.state.processors}
                     service={this.state.apiService}
-                    updateService={this.updateService.bind(this)} />
+                    updateService={this.updateService.bind(this)}
+                    subjects={this.state.subjects}
+                    selectSubject={this.selectSubject.bind(this)}
+                    createSubject={this.createSubject.bind(this)} />
                 {/* <DebugDrawer /> */}
             </div >
         )

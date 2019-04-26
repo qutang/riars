@@ -20,7 +20,6 @@ class SensorSetting extends React.Component {
     }
 
     componentDidMount() {
-        this.handlePortChange(this.port);
         this.handlePlacementChange(this.props.sensor.name);
     }
 
@@ -51,7 +50,7 @@ class SensorSetting extends React.Component {
                     }
                 </Select>
                 <h5>Select port</h5>
-                <InputNumber min={8000} max={8100} defaultValue={this.port} onChange={this.handlePortChange.bind(this)} />
+                <InputNumber min={8000} max={8100} defaultValue={8000} value={sensor.port} onChange={this.handlePortChange.bind(this)} />
             </div>
         )
     }

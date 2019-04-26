@@ -1,0 +1,13 @@
+.subject-list {
+    min-width: 200px;
+}
+
+.subject-list > div > div {
+    width: 100%;
+}
+
+.create-subject-item {
+    display: block;
+    margin-bottom: 5px;
+    width: 100%;
+}

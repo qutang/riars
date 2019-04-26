@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Badge, Popover, Input, Tooltip } from 'antd';
 import ApiServiceSetting from './ApiServiceSetting';
+import './ApiServiceMonitor.css';
 
 class ApiServiceMonitor extends React.Component {
     constructor(props) {

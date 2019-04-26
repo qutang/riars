@@ -40,6 +40,9 @@ class Guide extends React.Component {
                     processors={this.props.processors}
                     service={this.props.service}
                     updateService={this.props.updateService}
+                    subjects={this.props.subjects}
+                    selectSubject={this.props.selectSubject}
+                    createSubject={this.props.createSubject}
                     description={this.props.steps[current].description}>
                     {this.props.steps[current].content}
                 </StepContent>

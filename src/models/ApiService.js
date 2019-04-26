@@ -1,4 +1,6 @@
 import axios from 'axios';
+import Subject from './Subject';
+import Sensor from './Sensor';
 
 class ApiService {
     constructor() {
@@ -63,6 +65,80 @@ class ApiService {
             callback(response.status == 200);
         }).catch((error) => {
             callback(false);
+        });
+    }
+
+    querySubjects(callback) {
+        const subjectApiUrl = this.getUrl() + '/api/subjects';
+        axios.get(subjectApiUrl, {
+            responseType: 'json',
+        }).then((response) => {
+            if (response.status == 200) {
+                const data = response.data;
+                const subjects = data.map((subjJson) => {
+                    return Subject.fromJSON(subjJson);
+                });
+                callback(subjects, 200);
+            } else {
+                callback([], response.status);
+            }
+        }).catch(error => {
+            callback([], error);
+        });
+    }
+
+    selectSubject(subject, callback) {
+        const subjectApiUrl = this.getUrl() + '/api/subjects';
+        axios.post(subjectApiUrl, subject.toJSON()).then((response) => {
+            if (response.status == 200) {
+                const updatedSubject = Subject.fromJSON(response.data);
+                callback(updatedSubject, 200);
+            } else if (response.status == 405) {
+                const updatedSubject = Subject.fromJSON(response.data);
+                callback(updatedSubject, 405);
+            }
+        });
+    }
+
+    createSubject(subject, callback) {
+        const subjectApiUrl = this.getUrl() + '/api/subjects';
+        axios.put(subjectApiUrl, subject.toJSON()).then((response) => {
+            if (response.status == 200) {
+                const newSubject = Subject.fromJSON(response.data);
+                callback(newSubject, 200);
+            } else {
+                callback(null, response.status);
+            }
+        });
+    }
+
+    scanSensors(callback) {
+        const sensorApiUrl = this.getUrl() + '/api/sensors';
+        axios.get(sensorApiUrl).then(response => {
+            if (response.status == 200) {
+                const devicesJson = response.data;
+                const sensors = devicesJson.map((deviceJson, index) => {
+                    const sensor = new Sensor(deviceJson.address);
+                    sensor.name = deviceJson.name;
+                    sensor.port = deviceJson.port;
+                    sensor.samplingRate = deviceJson.sr;
+                    sensor.dynamicRange = deviceJson.grange;
+                    sensor.status = deviceJson.status;
+                    sensor.errorCode = deviceJson.error_code;
+                    if (sensor.status == 'running') {
+                        sensor.host = deviceJson.host;
+                        sensor.selected = true;
+                        sensor.order = deviceJson.order;
+                    } else {
+                        sensor.host = 'localhost';
+                        sensor.port = 8000;
+                    }
+                    return sensor;
+                });
+                callback(sensors, 200);
+            } else {
+                callback([], response.status)
+            }
         });
     }
 }

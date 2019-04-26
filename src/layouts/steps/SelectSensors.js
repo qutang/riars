@@ -9,25 +9,9 @@ const CheckboxGroup = Checkbox.Group;
 class SelectSensors extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {
-            scanning: false
-        }
-    }
-
-    handleScan() {
-        this.setState({
-            scanning: true
-        })
-        setTimeout(() => {
-            this.props.scanSensors();
-            this.setState({
-                scanning: false
-            })
-        }, 2000);
     }
 
     handleSelectChange(checkedList) {
-        console.log(checkedList);
         this.props.onSubmit(checkedList);
     }
 
@@ -43,12 +27,11 @@ class SelectSensors extends React.Component {
             return sensor.address
         });
 
-        console.log(defaultOptions);
         return (
             <div id='step-select-sensors'>
                 <Button type='primary'
-                    onClick={this.handleScan.bind(this)}
-                    loading={this.state.scanning}>
+                    onClick={this.props.scanSensors}
+                    loading={this.props.isScanningSensors}>
                     Scan nearby devices
                 </Button>
                 <div className='list-select-sensors'>
@@ -65,8 +48,7 @@ class SelectSensors extends React.Component {
                         {
                             this.props.sensors.map((sensor) => {
                                 return (
-                                    sensor.selected && <SensorSetting key={sensor.address} sensor={sensor} changeSensorPlacement={this.props.changeSensorPlacement} changeSensorPort={this.props.changeSensorPort}
-                                        defaultPort={this.props.defaultPort}></SensorSetting>
+                                    sensor.selected && <SensorSetting key={sensor.address} sensor={sensor} changeSensorPlacement={this.props.changeSensorPlacement} changeSensorPort={this.props.changeSensorPort}></SensorSetting>
                                 )
                             })
                         }
