@@ -1,6 +1,6 @@
 {
   "name": "riars",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Real-time interactive activity recognition system",
   "main": "index.js",
   "dependencies": {

@@ -132,7 +132,51 @@ class ApiService {
                     } else {
                         sensor.host = 'localhost';
                         sensor.port = 8000;
+                        sensor.order = sensor.port;
                     }
+                    return sensor;
+                });
+                callback(sensors, 200);
+            } else {
+                callback([], response.status)
+            }
+        });
+    }
+
+    runSensors(sensors, callback) {
+        const sensorApiUrl = this.getUrl() + '/api/sensors';
+        const requestData = sensors.filter(sensor => sensor.selected).map((sensor) => sensor.toJSON());
+        axios.put(sensorApiUrl, requestData).then(response => {
+            if (response.status == 200) {
+                const devicesJson = response.data;
+                const sensors = devicesJson.map((deviceJson, index) => {
+                    const sensor = Sensor.fromJSON(deviceJson);
+                    if (sensor.status == 'running') {
+                        sensor.selected = true;
+                    }
+                    return sensor;
+                });
+                callback(sensors, 200);
+            } else {
+                callback([], response.status)
+            }
+        });
+    }
+
+    stopSensors(sensors, callback) {
+        const sensorApiUrl = this.getUrl() + '/api/sensors';
+        const requestData = sensors.filter(sensor => sensor.selected).map((sensor) => sensor.toJSON());
+        axios.delete(sensorApiUrl, {
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            data: requestData
+        }).then(response => {
+            if (response.status == 200) {
+                const devicesJson = response.data;
+                const sensors = devicesJson.map((deviceJson, index) => {
+                    const sensor = Sensor.fromJSON(deviceJson);
+                    sensor.selected = true;
                     return sensor;
                 });
                 callback(sensors, 200);

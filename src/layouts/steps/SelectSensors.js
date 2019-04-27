@@ -38,6 +38,7 @@ class SelectSensors extends React.Component {
                     <CheckboxGroup
                         options={sensorOptions}
                         defaultValue={defaultOptions}
+                        value={defaultOptions}
                         onChange={this.handleSelectChange.bind(this)} />
                 </div>
                 <div className='setup-sensors'>

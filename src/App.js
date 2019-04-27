@@ -26,6 +26,8 @@ class App extends React.Component {
             apiService: new ApiService(),
             subjects: [],
             isScanningSensors: false,
+            isStartingSensors: false,
+            isStoppingSensors: false,
             accelerometerSamplingRate: 50,
             accelerometerDynamicRange: 8,
             predictions: [new Prediction([{ label: 'Walking', score: 0.3 }, { label: 'Sitting', score: 0.6 }, { label: 'Lying', score: 0.2 }]), new Prediction([{ label: 'Walking', score: 0.3 }, { label: 'Sitting', score: 0.6 }, { label: 'Lying', score: 0.2 }]), new Prediction([{ label: 'Walking', score: 0.2 }, { label: 'Sitting', score: 0.7 }, { label: 'Lying', score: 0.3 }])]
@@ -37,8 +39,13 @@ class App extends React.Component {
         service.protocol = protocol;
         service.host = host;
         service.port = port;
+        const updatedSensors = this.state.sensors.map(sensor => {
+            sensor.host = service.host;
+            return sensor.clone();
+        });
         this.setState({
-            apiService: service
+            apiService: service,
+            sensors: updatedSensors
         });
     }
 
@@ -193,6 +200,7 @@ class App extends React.Component {
         const updatedSensors = this.state.sensors.map((sensor) => {
             if (sensor.address == address) {
                 sensor.port = value;
+                sensor.order = value;
             }
             return sensor.clone();
         });
@@ -202,26 +210,54 @@ class App extends React.Component {
     }
 
     runSensors() {
-        const updatedSensors = this.state.sensors.map((sensor) => {
-            if (sensor.selected) {
-                sensor.status = 'running';
-            }
-            return sensor.clone();
-        });
         this.setState({
-            sensors: updatedSensors
+            isStartingSensors: true
+        });
+        this.state.apiService.runSensors(this.state.sensors, (sensors, status) => {
+            console.log(sensors);
+            if (status == 200) {
+                const existingSensors = this.state.sensors;
+                const updatedSensors = existingSensors.map((existingSensor) => {
+                    const foundSensor = Sensor.find(existingSensor.address, sensors);
+                    if (foundSensor != undefined) {
+                        return foundSensor;
+                    } else {
+                        return existingSensor.clone();
+                    }
+                });
+                this.setState({
+                    sensors: updatedSensors,
+                    isStartingSensors: false
+                });
+            } else {
+                message.error('Failed to start selected sensors');
+            }
         });
     }
 
     stopSensors() {
-        const updatedSensors = this.state.sensors.map((sensor) => {
-            if (sensor.selected) {
-                sensor.status = 'stopped';
-            }
-            return sensor.clone();
-        });
         this.setState({
-            sensors: updatedSensors
+            isStoppingSensors: true
+        });
+        this.state.apiService.stopSensors(this.state.sensors, (sensors, status) => {
+            console.log(sensors);
+            if (status == 200) {
+                const existingSensors = this.state.sensors;
+                const updatedSensors = existingSensors.map((existingSensor) => {
+                    const foundSensor = Sensor.find(existingSensor.address, sensors);
+                    if (foundSensor != undefined) {
+                        return foundSensor;
+                    } else {
+                        return existingSensor.clone();
+                    }
+                });
+                this.setState({
+                    sensors: updatedSensors,
+                    isStoppingSensors: false
+                });
+            } else {
+                message.error('Failed to stop selected sensors');
+            }
         });
     }
 
@@ -390,7 +426,7 @@ class App extends React.Component {
             title: 'Run and monitor sensors',
             subTitle: 'Submit settings, run and monitor sensors',
             description: 'Review sensor settings using the "Sensors" Tab, click "Submit settings and run sensors" to submit the settings to API server and start running the sensors. Click "Stop sensors" to stop the running of all sensors. You may check the monitor panel below to display the signal of the raw sensor data after you click "Connect" button to connect to the sensor\'s output signal.',
-            content: <RunSensors runSensors={this.runSensors.bind(this)} stopSensors={this.stopSensors.bind(this)} sensors={this.state.sensors} />,
+            content: <RunSensors runSensors={this.runSensors.bind(this)} stopSensors={this.stopSensors.bind(this)} sensors={this.state.sensors} isStartingSensors={this.state.isStartingSensors} isStoppingSensors={this.state.isStoppingSensors} />,
             validateNext: () => {
                 console.log('step 4 -> step 5');
                 this.queryProcessors();

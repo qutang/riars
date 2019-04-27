@@ -27,7 +27,6 @@ class SensorSetting extends React.Component {
         const sensor = this.props.sensor;
         const Option = Select.Option;
         const predefinedPlacements = Sensor.PREDEFINED_PLACEMENTS;
-        this.port = this.props.defaultPort + this.props.sensor.order;
         return (
             <div className='setup-a-sensor'>
                 <h3>{sensor.address}</h3>

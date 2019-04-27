@@ -25,8 +25,9 @@ class Sensor {
     }
 
     static find(address, sensors) {
-        const foundSensor = sensors.filter((sensor) => sensor.address == address)[0]
-        return foundSensor;
+        const foundSensor = sensors.filter((sensor) => sensor.address == address)
+
+        return foundSensor.length > 0 ? foundSensor[0] : undefined;
     }
 
     clone() {
@@ -132,9 +133,22 @@ class Sensor {
         return { selected, order, address, name, host, port, samplingRate, dynamicRange, status, errorCode }
     }
 
-    toJSONRequest() {
-        let { order, address, name, host, port, samplingRate, dynamicRange, status } = this;
-        return { order, address, name, host, port, samplingRate, dynamicRange, status }
+    toJSON() {
+        let { order, address, name, host, port, samplingRate, dynamicRange } = this;
+        return { order, address, name, host, port, sr: samplingRate, grange: dynamicRange }
+    }
+
+    static fromJSON(jsonData) {
+        const sensor = new Sensor(jsonData.address);
+        sensor.order = jsonData.order
+        sensor.name = jsonData.name
+        sensor.host = jsonData.host
+        sensor.port = jsonData.port
+        sensor.samplingRate = jsonData.sr
+        sensor.dynamicRange = jsonData.grange
+        sensor.status = jsonData.status
+        sensor.errorCode = jsonData.error_code
+        return sensor;
     }
 }
 

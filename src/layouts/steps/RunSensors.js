@@ -6,34 +6,6 @@ import './RunSensors.css';
 class RunSensors extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {
-            submitting: false,
-            stopping: false
-        }
-    }
-
-    handleRun() {
-        this.setState({
-            submitting: true
-        });
-        setTimeout(() => {
-            this.props.runSensors();
-            this.setState({
-                submitting: false
-            })
-        }, 2000);
-    }
-
-    handleStop() {
-        this.setState({
-            stopping: true
-        });
-        setTimeout(() => {
-            this.props.stopSensors();
-            this.setState({
-                stopping: false
-            })
-        }, 2000);
     }
 
     render() {
@@ -41,8 +13,8 @@ class RunSensors extends React.Component {
         return (
             <div id='step-run-sensors'>
                 <div className='run-sensors-control'>
-                    <Button type='primary' loading={this.state.submitting} onClick={this.handleRun.bind(this)}>Submit settings and run sensors</Button>
-                    <Button loading={this.state.stopping} onClick={this.handleStop.bind(this)}>Stop sensors</Button>
+                    <Button type='primary' loading={this.props.isStartingSensors} onClick={this.props.runSensors}>Submit settings and run sensors</Button>
+                    <Button loading={this.props.isStoppingSensors} onClick={this.props.stopSensors}>Stop sensors</Button>
                 </div>
                 <div className='sensor-monitors'>
                     {
