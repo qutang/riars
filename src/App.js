@@ -28,6 +28,8 @@ class App extends React.Component {
             isScanningSensors: false,
             isStartingSensors: false,
             isStoppingSensors: false,
+            isStartingProcessor: false,
+            isStoppingProcessor: false,
             accelerometerSamplingRate: 50,
             accelerometerDynamicRange: 8,
             predictions: [new Prediction([{ label: 'Walking', score: 0.3 }, { label: 'Sitting', score: 0.6 }, { label: 'Lying', score: 0.2 }]), new Prediction([{ label: 'Walking', score: 0.3 }, { label: 'Sitting', score: 0.6 }, { label: 'Lying', score: 0.2 }]), new Prediction([{ label: 'Walking', score: 0.2 }, { label: 'Sitting', score: 0.7 }, { label: 'Lying', score: 0.3 }])]
@@ -43,9 +45,14 @@ class App extends React.Component {
             sensor.host = service.host;
             return sensor.clone();
         });
+        const updatedProcessors = this.state.processors.map(p => {
+            p.host = service.host;
+            return p.clone();
+        });
         this.setState({
             apiService: service,
-            sensors: updatedSensors
+            sensors: updatedSensors,
+            processors: updatedProcessors
         });
     }
 
@@ -169,7 +176,6 @@ class App extends React.Component {
             accelerometerSamplingRate: samplingRate,
             sensors: updatedSensors
         });
-        message.success('Updated sampling rate for sensors');
     }
 
     changeAccelerometerDynamicRange(dynamicRange) {
@@ -181,7 +187,6 @@ class App extends React.Component {
             accelerometerDynamicRange: dynamicRange,
             sensors: updatedSensors
         });
-        message.success('Updated dynamic range for sensors');
     }
 
     changeSensorPlacement(address, value) {
@@ -261,15 +266,37 @@ class App extends React.Component {
         });
     }
 
+    connectSensor(sensor) {
+        this.state.apiService.connectSensor(sensor, (data) => {
+            console.log(data);
+        });
+    }
+
+    disconnectSensor(sensor) {
+        this.state.apiService.disconnectSensor(sensor, (data) => null);
+    }
+
     queryProcessors() {
-        const existingProcessors = this.state.processors;
-        let newProcessors = [new Processor('activity-model'), new Processor('posture-model')];
-        newProcessors = newProcessors.filter((processor) =>
-            !Processor.find(processor.name, existingProcessors)
-        );
-        const updatedProcessors = [...existingProcessors, ...newProcessors];
-        this.setState({
-            processors: updatedProcessors
+        this.state.apiService.queryProcessors((processors, status) => {
+            const existingProcessors = this.state.processors;
+            let updatedProcessors = processors;
+            if (existingProcessors.length > 0) {
+                updatedProcessors = existingProcessors.map((existingProcessor) => {
+                    const foundProcessor = Processor.find(existingProcessor.name, processors);
+                    if (foundProcessor != undefined && foundProcessor.status == 'running') {
+                        return foundProcessor;
+                    } else {
+                        return existingProcessor.clone();
+                    }
+                });
+            }
+            if (status == 200) {
+                this.setState({
+                    processors: updatedProcessors
+                });
+            } else {
+                console.error('Can not retrieve processors');
+            }
         });
     }
 
@@ -354,29 +381,61 @@ class App extends React.Component {
     }
 
     runProcessor() {
-        const processors = this.state.processors;
-        const updatedProcessors = processors.map((processor) => {
-            if (processor.selected) {
-                processor.status = 'running';
-            }
-            return processor.clone();
-        })
         this.setState({
-            processors: updatedProcessors
+            isStartingProcessor: true
         });
+        let processor = this.state.processors.filter(p => p.selected);
+        processor = processor.length > 0 ? processor[0] : undefined;
+        if (processor != undefined) {
+            this.state.apiService.runProcessor(processor, (p, status) => {
+                console.log(p);
+                if (status == 200) {
+                    const existingProcessors = this.state.processors;
+                    const updatedProcessors = existingProcessors.map((existingProcessor) => {
+                        if (existingProcessor.name == p.name) {
+                            return p;
+                        } else {
+                            return existingProcessor.clone();
+                        }
+                    });
+                    this.setState({
+                        processors: updatedProcessors,
+                        isStartingProcessor: false
+                    });
+                } else {
+                    message.error('Failed to start selected processor');
+                }
+            });
+        }
     }
 
     stopProcessor() {
-        const processors = this.state.processors;
-        const updatedProcessors = processors.map((processor) => {
-            if (processor.selected) {
-                processor.status = 'stopped';
-            }
-            return processor.clone();
-        })
         this.setState({
-            processors: updatedProcessors
+            isStoppingProcessor: true
         });
+        let processor = this.state.processors.filter(p => p.selected);
+        processor = processor.length > 0 ? processor[0] : undefined;
+        if (processor != undefined) {
+            this.state.apiService.stopProcessor(processor, (p, status) => {
+                console.log(p);
+                if (status == 200) {
+                    const existingProcessors = this.state.processors;
+                    const updatedProcessors = existingProcessors.map((existingProcessor) => {
+                        if (existingProcessor.name == p.name) {
+                            return p;
+                        } else {
+                            return existingProcessor.clone();
+                        }
+                    });
+                    this.setState({
+                        processors: updatedProcessors,
+                        isStoppingProcessor: false
+                    });
+                } else {
+                    message.error('Failed to stop selected processor');
+                }
+            });
+        }
     }
 
     correctLabel(index, label) {
@@ -426,9 +485,8 @@ class App extends React.Component {
             title: 'Run and monitor sensors',
             subTitle: 'Submit settings, run and monitor sensors',
             description: 'Review sensor settings using the "Sensors" Tab, click "Submit settings and run sensors" to submit the settings to API server and start running the sensors. Click "Stop sensors" to stop the running of all sensors. You may check the monitor panel below to display the signal of the raw sensor data after you click "Connect" button to connect to the sensor\'s output signal.',
-            content: <RunSensors runSensors={this.runSensors.bind(this)} stopSensors={this.stopSensors.bind(this)} sensors={this.state.sensors} isStartingSensors={this.state.isStartingSensors} isStoppingSensors={this.state.isStoppingSensors} />,
+            content: <RunSensors runSensors={this.runSensors.bind(this)} stopSensors={this.stopSensors.bind(this)} sensors={this.state.sensors} isStartingSensors={this.state.isStartingSensors} isStoppingSensors={this.state.isStoppingSensors} connectSensor={this.connectSensor.bind(this)} />,
             validateNext: () => {
-                console.log('step 4 -> step 5');
                 this.queryProcessors();
             },
             validateBack: () => null
@@ -451,7 +509,7 @@ class App extends React.Component {
             title: 'Run and monitor',
             subTitle: 'start experiment session',
             description: 'Use the "Processors" tab to review the settings of different processors and confirm the selected processor. Click "Submit settings and run the processor" to start running the processor and generate predictions. Click "Stop the processor" to stop the running processor. On the left monitor panel, you may see the visualization display that is optimized for experts; on the right monitor panel, you may see the visualization display shown to the subject (novice user).',
-            content: <RunProcessor runProcessor={this.runProcessor.bind(this)} stopProcessor={this.stopProcessor.bind(this)} selectedProcessor={this.state.selectedProcessor} predictions={this.state.predictions} correctLabel={this.correctLabel.bind(this)} addPredictionNote={this.addPredictionNote.bind(this)} />,
+            content: <RunProcessor runProcessor={this.runProcessor.bind(this)} stopProcessor={this.stopProcessor.bind(this)} isStartingProcessor={this.state.isStartingProcessor} isStoppingProcessor={this.state.isStoppingProcessor} predictions={this.state.predictions} correctLabel={this.correctLabel.bind(this)} addPredictionNote={this.addPredictionNote.bind(this)} />,
             validateNext: () => null,
             validateBack: () => null
         }];

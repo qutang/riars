@@ -41,7 +41,7 @@ class SetupSensors extends React.Component {
                         this.props.selectedSensors.map((sensor) => {
                             return (
                                 <SensorSetting key={sensor.address} sensor={sensor} changeSensorPlacement={this.props.changeSensorPlacement} changeSensorPort={this.props.changeSensorPort}
-                                    defaultPort={this.props.defaultPort}></SensorSetting>
+                                ></SensorSetting>
                             )
                         })
                     }

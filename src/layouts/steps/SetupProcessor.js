@@ -35,7 +35,6 @@ class SetupProcessor extends React.Component {
     }
 
     render() {
-        const Option = Select.Option;
         const sensors = this.props.sensors;
         const processors = this.props.processors;
         const selectedProcessor = processors.filter((processor) => processor.selected);
@@ -49,6 +48,7 @@ class SetupProcessor extends React.Component {
                     processors.map((p) => {
                         return (
                             p.selected && <ProcessorSetting
+                                key={p.name}
                                 sensors={sensors}
                                 handleInputChange={this.handleInputChange.bind(this)}
                                 handleNumberOfWindowsChange={this.handleNumberOfWindowsChange.bind(this)}

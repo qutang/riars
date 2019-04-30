@@ -1,3 +1,4 @@
+
 class Sensor {
     constructor(address) {
         this._address = address
@@ -10,6 +11,8 @@ class Sensor {
         this._order = undefined
         this._selected = false
         this._errorCode = undefined
+        this._webworker = undefined
+        this._refreshRate = 1
     }
 
     static get PREDEFINED_PLACEMENTS() {
@@ -41,7 +44,25 @@ class Sensor {
         sensor.status = this.status;
         sensor.order = this.order;
         sensor.errorCode = this.errorCode;
+        sensor.webworker = this.webworker;
+        sensor.refreshRate = this.refreshRate;
         return sensor;
+    }
+
+    get refreshRate() {
+        return this._refreshRate;
+    }
+
+    set refreshRate(value) {
+        this._refreshRate = value;
+    }
+
+    get webworker() {
+        return this._webworker
+    }
+
+    set webworker(worker) {
+        this._webworker = worker;
     }
 
     get url() {

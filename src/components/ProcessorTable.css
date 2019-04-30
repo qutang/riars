@@ -1,3 +1,8 @@
-.sensor-table table {
+.processor-table table {
     width: 100%;
+}
+
+.processor-table {
+    max-height: 220px;
+    overflow: auto;
 }

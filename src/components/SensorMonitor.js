@@ -9,7 +9,6 @@ class SensorMonitor extends React.Component {
         super(props)
         this.state = {
             showing: true,
-            chartData: { datasets: [] },
             connected: false
         };
         this.chartDuration = 12.8;
@@ -150,9 +149,12 @@ class SensorMonitor extends React.Component {
     }
 
     connectMonitor(e) {
+        if (!this.state.connected) {
+            this.props.connectSensor(this.props.sensor);
+        }
         this.setState({
             connected: !this.state.connected
-        })
+        });
     }
 
     render() {

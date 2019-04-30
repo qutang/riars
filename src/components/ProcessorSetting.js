@@ -22,7 +22,8 @@ class ProcessorSetting extends React.Component {
                 <h3>Select input sensors</h3>
                 <Select className='select-processor-input'
                     onChange={this.props.handleInputChange.bind(this)}
-                    defaultValue={p.inputUrls}
+                    defaultValue={undefined}
+                    value={p.inputUrls}
                     mode="multiple">
                     {
                         sensors.filter((sensor) => sensor.selected).map((sensor) => {
@@ -36,7 +37,8 @@ class ProcessorSetting extends React.Component {
                 </Select>
                 <h3>Choose window size</h3>
                 <Slider className='choose-processor-window-size'
-                    defaultValue={p.windowSize}
+                    defaultValue={12.8}
+                    value={p.windowSize}
                     tooltipVisible={true}
                     tipFormatter={(value) => value + ' s'}
                     min={2}
@@ -47,7 +49,8 @@ class ProcessorSetting extends React.Component {
                 </Slider>
                 <h3>Choose update rate</h3>
                 <Slider className='choose-processor-update-rate'
-                    defaultValue={p.updateRate}
+                    defaultValue={12.8}
+                    value={p.updateRate}
                     tooltipVisible={true}
                     tipFormatter={(value) => value + ' s'}
                     min={2}
@@ -59,12 +62,14 @@ class ProcessorSetting extends React.Component {
                 <h3>Set automatic stop</h3>
                 <p>The number of windows of samples to be processed before the processor automatically shuts down. When it is 0, the processor will run forever until user manually stops it.</p>
                 <InputNumber
-                    defaultValue={p.numberOfWindows}
+                    value={p.numberOfWindows}
+                    defaultValue={0}
                     min={0}
                     onChange={this.props.handleNumberOfWindowsChange.bind(this)}></InputNumber>
                 <h3>Choose output port</h3>
                 <InputNumber
-                    defaultValue={p.port}
+                    defaultValue={9000}
+                    value={p.port}
                     min={0}
                     onChange={this.props.handlePortChange.bind(this)}></InputNumber>
             </div>

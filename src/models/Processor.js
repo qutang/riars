@@ -109,8 +109,36 @@ class Processor {
     }
 
     toJSON() {
+        let { name, host, port, updateRate, windowSize, numberOfWindows, status } = this;
+        const inputUrls = this.inputUrls;
+        return { name, host, port, update_rate: updateRate, window_size: windowSize, number_of_windows: numberOfWindows, device_urls: inputUrls, status: status }
+    }
+
+    toTable() {
         let { selected, name, host, port, updateRate, windowSize, numberOfWindows, inputUrls, status } = this;
-        return { selected, name, host, port, updateRate, windowSize, numberOfWindows, inputUrls, status }
+        return { selected, name, host, port, updateRate, windowSize, numberOfWindows, inputUrls, status: status }
+    }
+
+    static fromJSON(jsonObj) {
+        const processor = new Processor(jsonObj.name);
+        processor.host = jsonObj.host;
+        processor.port = jsonObj.port;
+        processor.status = jsonObj.status;
+        processor.updateRate = jsonObj.update_rate;
+        processor.windowSize = jsonObj.window_size;
+        processor.numberOfWindows = jsonObj.number_of_windows;
+        processor.inputUrls = jsonObj.device_urls;
+        if (processor.status == 'running') {
+            processor.selected = true
+        } else {
+            processor.selected = false
+            processor.host = 'localhost'
+            processor.port = 9000
+            processor.numberOfWindows = 0
+            processor.windowSize = 12.8
+            processor.updateRate = 12.8
+        }
+        return processor;
     }
 }
 

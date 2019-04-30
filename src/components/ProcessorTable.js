@@ -12,8 +12,7 @@ class ProcessorTable extends React.Component {
             const data = {
                 key: String(index)
             }
-            const processorObj = processor.toJSON();
-            console.log(processorObj);
+            const processorObj = processor.toTable();
             processorObj.inputUrls = processorObj.inputUrls.join(', ');
             processorObj.selected = String(processorObj.selected);
             const result = { ...data, ...processorObj }
@@ -23,7 +22,7 @@ class ProcessorTable extends React.Component {
     }
 
     initColumns(processor) {
-        const processorObj = processor.toJSON();
+        const processorObj = processor.toTable();
         const keys = Object.keys(processorObj);
         const result = keys.map((key) => {
             return {

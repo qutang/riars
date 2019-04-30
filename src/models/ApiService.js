@@ -1,6 +1,9 @@
 import axios from 'axios';
 import Subject from './Subject';
 import Sensor from './Sensor';
+import Processor from './Processor';
+import WebWorker from '../webworkers/WebWorker';
+import buildWebWorker from '../webworkers/sensor_worker';
 
 class ApiService {
     constructor() {
@@ -160,6 +163,8 @@ class ApiService {
             } else {
                 callback([], response.status)
             }
+        }).catch(error => {
+            callback([], error);
         });
     }
 
@@ -182,6 +187,90 @@ class ApiService {
                 callback(sensors, 200);
             } else {
                 callback([], response.status)
+            }
+        });
+    }
+
+    connectSensor(sensor, callback) {
+        console.log(sensor);
+        sensor.webworker = new WebWorker(buildWebWorker);
+        sensor.webworker.addEventListener('message', (e) => {
+            if (e.data['action'] == 'error') {
+                this.disconnectSensor(sensor);
+                sensor.webworker.terminate();
+            } else if (e.data['action'] == 'data') {
+                if (e.data.content && e.data.content.length > 0) {
+                    callback(e.data.content);
+                }
+            }
+        });
+        sensor.webworker.postMessage({
+            'action': 'start',
+            'host': sensor.host,
+            'port': sensor.port,
+            'update_rate': sensor.refreshRate
+        });
+    }
+
+    disconnectSensor(sensor) {
+        sensor.webworker.postMessage({
+            'action': 'stop',
+            'port': sensor.port
+        });
+    }
+
+    queryProcessors(callback) {
+        const processorApiUrl = this.getUrl() + '/api/processors';
+        axios.get(processorApiUrl).then(response => {
+            if (response.status == 200) {
+                const processorJson = response.data;
+                const processors = processorJson.map((jsonObj, index) => {
+                    const processor = Processor.fromJSON(jsonObj);
+                    return processor;
+                });
+                callback(processors, 200);
+            } else {
+                callback([], response.status);
+            }
+        });
+    }
+
+    runProcessor(processor, callback) {
+        const processorApiUrl = this.getUrl() + '/api/processors/' + processor.name;
+        const requestData = processor.toJSON();
+        console.log(requestData);
+        axios.put(processorApiUrl, requestData).then(response => {
+            if (response.status == 200) {
+                const processorJson = response.data;
+                const processor = Processor.fromJSON(processorJson);
+                if (processor.status == 'running') {
+                    processor.selected = true;
+                }
+                callback(processor, 200);
+            } else {
+                callback(undefined, response.status);
+            }
+        }).catch(error => {
+            callback(undefined, error);
+        });
+    }
+
+    stopProcessor(processor, callback) {
+        const processorApiUrl = this.getUrl() + '/api/processors/' + processor.name;
+        const requestData = processor.toJSON();
+        axios.delete(processorApiUrl, {
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            data: requestData
+        }).then(response => {
+            if (response.status == 200) {
+                const processorJson = response.data;
+                const processor = Processor.fromJSON(processorJson);
+                processor.selected = true;
+                callback(processor, 200);
+            } else {
+                callback(undefined, response.status)
             }
         });
     }

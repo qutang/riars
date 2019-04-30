@@ -6,42 +6,14 @@ import './RunProcessor.css';
 class RunProcessor extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {
-            submitting: false,
-            stopping: false
-        }
-    }
-
-    handleRun() {
-        this.setState({
-            submitting: true
-        });
-        setTimeout(() => {
-            this.props.runProcessor();
-            this.setState({
-                submitting: false
-            })
-        }, 2000);
-    }
-
-    handleStop() {
-        this.setState({
-            stopping: true
-        });
-        setTimeout(() => {
-            this.props.stopProcessor();
-            this.setState({
-                stopping: false
-            })
-        }, 2000);
     }
 
     render() {
         return (
             <div id='step-run-processor'>
                 <div className='run-processor-control'>
-                    <Button type='primary' loading={this.state.submitting} onClick={this.handleRun.bind(this)}>Submit settings and run the processor</Button>
-                    <Button loading={this.state.stopping} onClick={this.handleStop.bind(this)}>Stop the processor</Button>
+                    <Button type='primary' loading={this.props.isStartingProcessor} onClick={this.props.runProcessor}>Submit settings and run the processor</Button>
+                    <Button loading={this.props.isStoppingProcessor} onClick={this.props.stopProcessor}>Stop the processor</Button>
                 </div>
                 <div className='processor-monitors'>
                     <div className='expert-monitors'>
@@ -50,9 +22,7 @@ class RunProcessor extends React.Component {
                         <UserPredictionMonitor predictions={this.props.predictions} correctLabel={this.props.correctLabel.bind(this)}
                             addPredictionNote={this.props.addPredictionNote.bind(this)} />
                     </div>
-
                 </div>
-
             </div>
         )
     }
