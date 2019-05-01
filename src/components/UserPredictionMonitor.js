@@ -43,8 +43,8 @@ class UserPredictionMonitor extends React.Component {
     render() {
 
         return (
-            <div className='user-prediction-monitor'>
-                {this.renderPastPredictions(5)}
+            this.props.predictions.length && <div className='user-prediction-monitor'>
+                {this.renderPastPredictions(3)}
                 <div className='current-prediction'>
                     {this.renderCurrentPrediction()}
                 </div>

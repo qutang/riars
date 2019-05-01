@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Tag, Badge, Button } from 'antd';
+import Prediction from '../models/Prediction';
 
 
 class PredictionTag extends React.Component {
@@ -16,8 +17,9 @@ class PredictionTag extends React.Component {
         const pr = this.props.pr;
         return (
             <a className='prediction-tag' onClick={this.correctLabel.bind(this)}><Tag
-                color={past ? "#bfbfbf" : "#108ee9"}
-                style={{ opacity: pr.score, fontSize: "1.5em", padding: "0.5em", color: past ? 'black' : 'white', fontWeight: "bold" }} > <Badge color={this.props.flag} style={{ opactiy: 1 }} />{pr.label}</Tag></a>
+                className='prediction-tag-tag'
+                color={past ? "rgba(191, 191, 191, " + pr.score + ')' : "rgba(16,142,233," + pr.score + ')'}
+                style={{ color: 'black', fontWeight: "bold", fontSize: "1.2em", padding: "0.3em" }} > <Badge color={this.props.flag} style={{ opactiy: 1 }} />{Prediction.PREDEFINED_CLASS_ABBR[pr.label] ? Prediction.PREDEFINED_CLASS_ABBR[pr.label] : pr.label}</Tag></a>
         )
     }
 }

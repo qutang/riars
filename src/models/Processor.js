@@ -9,6 +9,19 @@ class Processor {
         this._status = 'stopped'
         this._inputUrls = []
         this._selected = false
+        this._webworker = undefined
+    }
+
+    update(anotherProcessor) {
+        this.port = anotherProcessor.port || this.port;
+        this.host = anotherProcessor.host || this.host;
+        this.updateRate = anotherProcessor.updateRate || this.updateRate;
+        this.windowSize = anotherProcessor.windowSize || this.windowSize;
+        this.status = anotherProcessor.status || this.status;
+        this.numberOfWindows = anotherProcessor.numberOfWindows || this.numberOfWindows;
+        this.inputUrls = anotherProcessor.inputUrls == undefined ? this.inputUrls : anotherProcessor.inputUrls.slice(0);
+        this.selected = anotherProcessor.selected == undefined ? this.selected : anotherProcessor.selected;
+        this.webworker = this.webworker == undefined ? anotherProcessor.webworker : this.webworker;
     }
 
     clone() {
@@ -21,6 +34,7 @@ class Processor {
         newProcessor.numberOfWindows = this.numberOfWindows;
         newProcessor.inputUrls = this.inputUrls.slice(0);
         newProcessor.selected = this.selected;
+        newProcessor.webworker = this.webworker;
         return newProcessor;
     }
 
@@ -33,6 +47,46 @@ class Processor {
         } else {
             return false
         }
+    }
+
+    static merge(processorsA, processorsB) {
+        const namesA = processorsA.map(p => p.name);
+        const namesB = processorsB.map(p => p.name);
+        const unionNames = new Set([...namesA, ...namesB]);
+        const merged = unionNames.map(name => {
+            const foundA = Processor.find(name, processorsA);
+            const foundB = Processor.find(name, processorsB);
+            const result = undefined;
+            if (foundA && foundB) {
+                foundA.update(foundB);
+                result = foundA.clone();
+            } else if (foundA && !foundB) {
+                result = foundA.clone();
+            } else if (!foundA && foundB) {
+                result = foundB.clone();
+            }
+            return result;
+        });
+        return merged;
+    }
+
+    static mergeForRight(processorsA, processorsB) {
+        return processorsB.map(p => {
+            const foundA = Processor.find(p.name, processorsA);
+            if (foundA) {
+                foundA.update(p);
+                return foundA.clone();
+            }
+            return p;
+        });
+    }
+
+    get webworker() {
+        return this._webworker
+    }
+
+    set webworker(value) {
+        this._webworker = value
     }
 
     get selected() {
@@ -115,8 +169,8 @@ class Processor {
     }
 
     toTable() {
-        let { selected, name, host, port, updateRate, windowSize, numberOfWindows, inputUrls, status } = this;
-        return { selected, name, host, port, updateRate, windowSize, numberOfWindows, inputUrls, status: status }
+        let { selected, name, host, port, updateRate, windowSize, numberOfWindows, inputUrls, status, webworker } = this;
+        return { selected, name, host, port, updateRate, windowSize, numberOfWindows, inputUrls, status: status, webworker: String(webworker != undefined) }
     }
 
     static fromJSON(jsonObj) {

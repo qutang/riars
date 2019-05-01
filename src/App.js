@@ -14,6 +14,9 @@ import Prediction from './models/Prediction';
 import ApiService from './models/ApiService';
 import Subject from './models/Subject';
 import { version } from '../package.json';
+import WebWorker from './webworkers/WebWorker';
+import buildSensorWorker from './webworkers/sensor_worker';
+import buildProcessorWorker from './webworkers/processor_worker';
 import DebugDrawer from './components/DebugDrawer';
 
 class App extends React.Component {
@@ -32,7 +35,7 @@ class App extends React.Component {
             isStoppingProcessor: false,
             accelerometerSamplingRate: 50,
             accelerometerDynamicRange: 8,
-            predictions: [new Prediction([{ label: 'Walking', score: 0.3 }, { label: 'Sitting', score: 0.6 }, { label: 'Lying', score: 0.2 }]), new Prediction([{ label: 'Walking', score: 0.3 }, { label: 'Sitting', score: 0.6 }, { label: 'Lying', score: 0.2 }]), new Prediction([{ label: 'Walking', score: 0.2 }, { label: 'Sitting', score: 0.7 }, { label: 'Lying', score: 0.3 }])]
+            predictions: []
         }
     }
 
@@ -140,9 +143,20 @@ class App extends React.Component {
             isScanningSensors: true
         })
         this.state.apiService.scanSensors((sensors, status) => {
+            const existingSensors = this.state.sensors;
+            const updatedSensors = sensors.map(sensor => {
+                const found = Sensor.find(sensor.address, existingSensors);
+                sensor.webworker = new WebWorker(buildSensorWorker);
+                if (found) {
+                    found.update(sensor);
+                    return found;
+                } else {
+                    return sensor;
+                }
+            });
             if (status == 200) {
                 this.setState({
-                    sensors: sensors,
+                    sensors: updatedSensors,
                     isScanningSensors: false
                 });
             } else {
@@ -225,7 +239,8 @@ class App extends React.Component {
                 const updatedSensors = existingSensors.map((existingSensor) => {
                     const foundSensor = Sensor.find(existingSensor.address, sensors);
                     if (foundSensor != undefined) {
-                        return foundSensor;
+                        existingSensor.update(foundSensor);
+                        return existingSensor.clone();
                     } else {
                         return existingSensor.clone();
                     }
@@ -244,17 +259,21 @@ class App extends React.Component {
         this.setState({
             isStoppingSensors: true
         });
+        this.state.sensors.forEach(sensor => {
+            if (sensor.isConnected) {
+                this.disconnectSensor(sensor);
+            }
+        });
         this.state.apiService.stopSensors(this.state.sensors, (sensors, status) => {
-            console.log(sensors);
             if (status == 200) {
                 const existingSensors = this.state.sensors;
                 const updatedSensors = existingSensors.map((existingSensor) => {
                     const foundSensor = Sensor.find(existingSensor.address, sensors);
                     if (foundSensor != undefined) {
-                        return foundSensor;
-                    } else {
-                        return existingSensor.clone();
+                        existingSensor.update(foundSensor);
+                        // existingSensor.isConnected = false;
                     }
+                    return existingSensor.clone();
                 });
                 this.setState({
                     sensors: updatedSensors,
@@ -264,32 +283,102 @@ class App extends React.Component {
                 message.error('Failed to stop selected sensors');
             }
         });
+
     }
 
     connectSensor(sensor) {
-        this.state.apiService.connectSensor(sensor, (data) => {
-            console.log(data);
+        const updatedSensors = this.state.sensors.map(s => {
+            if (s.address == sensor.address) {
+                s.isConnecting = true;
+            }
+            return s.clone();
+        });
+        this.setState({
+            sensors: updatedSensors
+        });
+        this.state.apiService.connectSensor(sensor, (newData) => {
+            if (newData == 'error' || newData == 'stopped') {
+                message.error('Connection to ' + sensor.name + ' is in error or stopped, stop connection.');
+                const updatedSensors = this.state.sensors.map(s => {
+                    if (s.address == sensor.address) {
+                        s.isConnected = false;
+                    }
+                    return s.clone();
+                });
+                this.setState({
+                    sensors: updatedSensors
+                });
+            } else {
+                const currentSensor = Sensor.find(sensor.address, this.state.sensors);
+                let currentDatasets = [];
+                if (currentSensor) {
+                    currentDatasets = currentSensor.datasets;
+                }
+                const duration = sensor.dataBufferSize;
+                const newDatasets = newData.datasets;
+                console.log(currentDatasets);
+
+                const newLegends = new Set(newDatasets.map(dataset => dataset.label));
+                const existingLegends = new Set(currentDatasets.map(dataset => dataset.label));
+
+                const updatedLegends = Array.from(new Set([...newLegends, ...existingLegends]));
+
+                const updatedDatasets = updatedLegends.map((legend, index) => {
+                    if (newLegends.has(legend) && existingLegends.has(legend)) {
+                        console.log('append ' + legend);
+                        const currentDataset = currentDatasets.filter(dataset => dataset.label == legend)[0];
+                        const newDataset = newDatasets.filter(dataset => dataset.label == legend)[0];
+                        let updatedData = currentDataset.data.concat(newDataset.data);
+                        const stopTime = updatedData[updatedData.length - 1].x;
+                        const startTime = stopTime - duration;
+                        updatedData = updatedData.filter(sample => sample.x >= startTime && sample.x < stopTime);
+                        return {
+                            label: legend,
+                            data: updatedData
+                        }
+                    } else if (newLegends.has(legend) && !existingLegends.has(legend)) {
+                        console.log('add ' + legend);
+                        const newDataset = newDatasets.filter(dataset => dataset.label == legend)[0];
+                        return {
+                            label: legend,
+                            data: newDataset.data
+                        }
+                    } else {
+                        // no new data
+                        const currentDataset = currentDatasets.filter(dataset => dataset.label == legend)[0];
+                        return {
+                            label: legend,
+                            data: currentDataset.data
+                        }
+                    }
+                });
+
+                console.log(updatedDatasets);
+
+                const updatedSensors = this.state.sensors.map(s => {
+                    if (s.address == sensor.address) {
+                        s.isConnected = true;
+                        s.datasets = updatedDatasets;
+                        s.isConnecting = false;
+                    }
+                    return s.clone();
+                });
+
+                this.setState({
+                    sensors: updatedSensors
+                });
+            }
         });
     }
 
     disconnectSensor(sensor) {
-        this.state.apiService.disconnectSensor(sensor, (data) => null);
+        this.state.apiService.disconnectSensor(sensor);
     }
 
     queryProcessors() {
         this.state.apiService.queryProcessors((processors, status) => {
             const existingProcessors = this.state.processors;
-            let updatedProcessors = processors;
-            if (existingProcessors.length > 0) {
-                updatedProcessors = existingProcessors.map((existingProcessor) => {
-                    const foundProcessor = Processor.find(existingProcessor.name, processors);
-                    if (foundProcessor != undefined && foundProcessor.status == 'running') {
-                        return foundProcessor;
-                    } else {
-                        return existingProcessor.clone();
-                    }
-                });
-            }
+            const updatedProcessors = Processor.mergeForRight(existingProcessors, processors)
             if (status == 200) {
                 this.setState({
                     processors: updatedProcessors
@@ -305,8 +394,10 @@ class App extends React.Component {
         const updatedProcessors = processors.map((processor) => {
             if (name == processor.name) {
                 processor.selected = true;
+                processor.webworker = new WebWorker(buildProcessorWorker);
             } else {
                 processor.selected = false;
+                processor.webworker = undefined;
             }
             return processor.clone();
         })
@@ -388,22 +479,46 @@ class App extends React.Component {
         processor = processor.length > 0 ? processor[0] : undefined;
         if (processor != undefined) {
             this.state.apiService.runProcessor(processor, (p, status) => {
-                console.log(p);
+                // run callback
                 if (status == 200) {
                     const existingProcessors = this.state.processors;
                     const updatedProcessors = existingProcessors.map((existingProcessor) => {
                         if (existingProcessor.name == p.name) {
-                            return p;
-                        } else {
-                            return existingProcessor.clone();
+                            existingProcessor.update(p);
                         }
+                        return existingProcessor.clone();
                     });
                     this.setState({
-                        processors: updatedProcessors,
-                        isStartingProcessor: false
+                        processors: updatedProcessors
+                    });
+                    this.state.apiService.connectProcessor(processor, (data) => {
+                        // connection callback
+                        if (data == 'error' || data == 'stopped') {
+                            message.error('Connection to ' + processor.name + ' is in error or stopped, stop connection.');
+                            this.setState({
+                                isStoppingProcessor: false
+                            });
+                        } else {
+                            let updatedPredictions = [];
+                            const existingPredictions = this.state.predictions;
+                            const newPredictions = data.map(predictionJson => {
+                                const prediction = Prediction.fromJSON(predictionJson);
+                                return prediction;
+                            });
+                            if (existingPredictions.length == 0) {
+                                updatedPredictions = newPredictions;
+                            } else {
+                                updatedPredictions = existingPredictions.concat(newPredictions);
+                                updatedPredictions = updatedPredictions.slice(Math.max(updatedPredictions.length - 10, 0), updatedPredictions.length)
+                            }
+                            this.setState({
+                                isStartingProcessor: false,
+                                predictions: updatedPredictions
+                            });
+                        }
                     });
                 } else {
-                    message.error('Failed to start selected processor');
+                    message.error('Failed to start selected processor: ' + status);
                 }
             });
         }
@@ -413,6 +528,12 @@ class App extends React.Component {
         this.setState({
             isStoppingProcessor: true
         });
+        setTimeout(() => {
+            this.setState({
+                isStoppingProcessor: false
+            });
+            message.error('Time out in stopping processor, force reset');
+        }, 10 * 1000);
         let processor = this.state.processors.filter(p => p.selected);
         processor = processor.length > 0 ? processor[0] : undefined;
         if (processor != undefined) {
@@ -422,15 +543,14 @@ class App extends React.Component {
                     const existingProcessors = this.state.processors;
                     const updatedProcessors = existingProcessors.map((existingProcessor) => {
                         if (existingProcessor.name == p.name) {
-                            return p;
-                        } else {
-                            return existingProcessor.clone();
+                            existingProcessor.update(p);
                         }
+                        return existingProcessor.clone();
                     });
                     this.setState({
-                        processors: updatedProcessors,
-                        isStoppingProcessor: false
+                        processors: updatedProcessors
                     });
+                    this.state.apiService.disconnectProcessor(processor);
                 } else {
                     message.error('Failed to stop selected processor');
                 }
@@ -485,7 +605,7 @@ class App extends React.Component {
             title: 'Run and monitor sensors',
             subTitle: 'Submit settings, run and monitor sensors',
             description: 'Review sensor settings using the "Sensors" Tab, click "Submit settings and run sensors" to submit the settings to API server and start running the sensors. Click "Stop sensors" to stop the running of all sensors. You may check the monitor panel below to display the signal of the raw sensor data after you click "Connect" button to connect to the sensor\'s output signal.',
-            content: <RunSensors runSensors={this.runSensors.bind(this)} stopSensors={this.stopSensors.bind(this)} sensors={this.state.sensors} isStartingSensors={this.state.isStartingSensors} isStoppingSensors={this.state.isStoppingSensors} connectSensor={this.connectSensor.bind(this)} />,
+            content: <RunSensors runSensors={this.runSensors.bind(this)} stopSensors={this.stopSensors.bind(this)} sensors={this.state.sensors} isStartingSensors={this.state.isStartingSensors} isStoppingSensors={this.state.isStoppingSensors} connectSensor={this.connectSensor.bind(this)} disconnectSensor={this.disconnectSensor.bind(this)} />,
             validateNext: () => {
                 this.queryProcessors();
             },

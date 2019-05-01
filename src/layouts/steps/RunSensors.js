@@ -20,7 +20,7 @@ class RunSensors extends React.Component {
                     {
                         sensors.map((sensor) => {
                             return (
-                                sensor.selected && <SensorMonitor key={sensor.address} sensor={sensor} connectSensor={this.props.connectSensor} />
+                                sensor.selected && <SensorMonitor key={sensor.address} sensor={sensor} connectSensor={this.props.connectSensor} disconnectSensor={this.props.disconnectSensor} />
                             )
                         })
                     }

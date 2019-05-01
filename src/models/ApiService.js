@@ -2,8 +2,6 @@ import axios from 'axios';
 import Subject from './Subject';
 import Sensor from './Sensor';
 import Processor from './Processor';
-import WebWorker from '../webworkers/WebWorker';
-import buildWebWorker from '../webworkers/sensor_worker';
 
 class ApiService {
     constructor() {
@@ -121,13 +119,7 @@ class ApiService {
             if (response.status == 200) {
                 const devicesJson = response.data;
                 const sensors = devicesJson.map((deviceJson, index) => {
-                    const sensor = new Sensor(deviceJson.address);
-                    sensor.name = deviceJson.name;
-                    sensor.port = deviceJson.port;
-                    sensor.samplingRate = deviceJson.sr;
-                    sensor.dynamicRange = deviceJson.grange;
-                    sensor.status = deviceJson.status;
-                    sensor.errorCode = deviceJson.error_code;
+                    const sensor = Sensor.fromJSON(deviceJson);
                     if (sensor.status == 'running') {
                         sensor.host = deviceJson.host;
                         sensor.selected = true;
@@ -192,16 +184,15 @@ class ApiService {
     }
 
     connectSensor(sensor, callback) {
-        console.log(sensor);
-        sensor.webworker = new WebWorker(buildWebWorker);
         sensor.webworker.addEventListener('message', (e) => {
-            if (e.data['action'] == 'error') {
-                this.disconnectSensor(sensor);
-                sensor.webworker.terminate();
-            } else if (e.data['action'] == 'data') {
-                if (e.data.content && e.data.content.length > 0) {
+            if (e.data.action == 'error') {
+                callback('error');
+            } else if (e.data.action == 'data') {
+                if (e.data.content && e.data.content.datasets.length > 0) {
                     callback(e.data.content);
                 }
+            } else if (e.data.action == 'stopped') {
+                callback('stopped');
             }
         });
         sensor.webworker.postMessage({
@@ -239,6 +230,7 @@ class ApiService {
         const processorApiUrl = this.getUrl() + '/api/processors/' + processor.name;
         const requestData = processor.toJSON();
         console.log(requestData);
+        const api = this;
         axios.put(processorApiUrl, requestData).then(response => {
             if (response.status == 200) {
                 const processorJson = response.data;
@@ -255,9 +247,37 @@ class ApiService {
         });
     }
 
+    connectProcessor(processor, callback) {
+        processor.webworker.addEventListener('message', (e) => {
+            if (e.data.action == 'error') {
+                callback('error');
+            } else if (e.data.action == 'data') {
+                if (e.data.content && e.data.content.length > 0) {
+                    callback(e.data.content);
+                }
+            } else if (e.data.action == 'stopped') {
+                callback('stopped');
+            }
+        });
+        processor.webworker.postMessage({
+            'action': 'start',
+            'host': processor.host,
+            'port': processor.port,
+            'update_rate': processor.refreshRate
+        });
+    }
+
+    disconnectProcessor(processor) {
+        processor.webworker.postMessage({
+            'action': 'stop',
+            'port': processor.port
+        });
+    }
+
     stopProcessor(processor, callback) {
         const processorApiUrl = this.getUrl() + '/api/processors/' + processor.name;
         const requestData = processor.toJSON();
+        const api = this;
         axios.delete(processorApiUrl, {
             headers: {
                 'Content-Type': 'application/json'

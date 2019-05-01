@@ -1,6 +1,6 @@
 
 
-const buildWebWorker = function () {
+const buildSensorWorker = function () {
     const SensorWorker = function (host, port, updateRate) {
         this.host = host;
         this.port = port;
@@ -20,7 +20,7 @@ const buildWebWorker = function () {
                 console.log(this.transformedData);
                 const message = {
                     action: 'data',
-                    content: this.transformedData
+                    content: Object.assign({}, this.transformedData)
                 };
 
                 postMessage(message);
@@ -38,9 +38,8 @@ const buildWebWorker = function () {
         }
 
         this.onWebSocketError = function (e) {
-            console.log(e);
+            console.error(e);
             this.stop();
-            close();
         }
 
         this.onWebSocketMessage = function (e) {
@@ -112,6 +111,9 @@ const buildWebWorker = function () {
             this._broadcaster = undefined;
             this._ws.close();
             this.postData();
+            postMessage({
+                action: 'stopped'
+            });
         }
     };
     let worker = undefined;
@@ -145,4 +147,4 @@ const buildWebWorker = function () {
     });
 }
 
-export default buildWebWorker;
+export default buildSensorWorker;

@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
-import { Checkbox, Tooltip, Button, Empty, Badge } from 'antd';
-import { Line } from 'react-chartjs';
+import { Checkbox, Tooltip, Button, Empty, Badge, Slider, message } from 'antd';
+import { Line } from 'react-chartjs-2';
 import Sensor from '../models/Sensor';
 
 
@@ -8,11 +8,37 @@ class SensorMonitor extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
-            showing: true,
-            connected: false
+            showing: true
         };
-        this.chartDuration = 12.8;
-        this.options = {
+
+        this._colors = {
+            red: 'rgb(255, 99, 132)',
+            orange: 'rgb(255, 159, 64)',
+            yellow: 'rgb(255, 205, 86)',
+            green: 'rgb(75, 192, 192)',
+            blue: 'rgb(54, 162, 235)',
+            purple: 'rgb(153, 102, 255)',
+            grey: 'rgb(201, 203, 207)'
+        };
+        this._datasetSkeleton = {
+            fill: false,
+            lineTension: 0.2,
+            borderCapStyle: 'butt',
+            borderDash: [],
+            borderDashOffset: 0.0,
+            borderJoinStyle: 'miter',
+            pointBackgroundColor: "#fff",
+            pointBorderWidth: 1,
+            pointHoverRadius: 5,
+            pointHoverBorderWidth: 2,
+            pointRadius: 1,
+            pointHitRadius: 10,
+            spanGaps: false
+        }
+    }
+
+    getOptions(duration) {
+        const options = {
             layout: {
                 padding: {
                     left: 0,
@@ -55,7 +81,7 @@ class SensorMonitor extends React.Component {
                     type: 'time',
                     time: {
                         unit: 'millisecond',
-                        stepSize: this.chartDuration * 1000.0 / 4,
+                        stepSize: duration * 1000.0 / 4,
                         displayFormats: {
                             millisecond: 'HH:mm:ss.SSS'
                         }
@@ -63,83 +89,35 @@ class SensorMonitor extends React.Component {
                 }]
             }
         };
-        this.colors = {
-            red: 'rgb(255, 99, 132)',
-            orange: 'rgb(255, 159, 64)',
-            yellow: 'rgb(255, 205, 86)',
-            green: 'rgb(75, 192, 192)',
-            blue: 'rgb(54, 162, 235)',
-            purple: 'rgb(153, 102, 255)',
-            grey: 'rgb(201, 203, 207)'
-        };
+        return options;
     }
 
-    initChartData(data) {
-        const names = Object.keys(data);
-        const colors = this.colors;
-        const color_names = Object.keys(colors);
-
-        var datasets = names.map(function (name, index) {
-            var color = colors[color_names[index % color_names.length]];
-            var dataset = {
-                label: name,
-                fill: false,
-                lineTension: 0.2,
-                borderColor: color,
-                borderCapStyle: 'butt',
-                borderDash: [],
-                borderDashOffset: 0.0,
-                borderJoinStyle: 'miter',
-                pointBorderColor: color,
-                pointBackgroundColor: "#fff",
-                pointBorderWidth: 1,
-                pointHoverRadius: 5,
-                pointHoverBackgroundColor: color,
-                pointHoverBorderColor: color,
-                pointHoverBorderWidth: 2,
-                pointRadius: 1,
-                pointHitRadius: 10,
-                data: data[name],
-                spanGaps: false
-            }
-            return dataset
-        });
-        this.setState({
-            chartData: {
-                datasets: datasets
-            }
-        })
+    initDataset() {
+        return Object.assign({}, this._datasetSkeleton);
     }
 
-    addChartData(data) {
-        const duration = this.chartDuration; // seconds
-        const datasets = this.state.chartData.datasets;
-        const updatedDatasets = datasets.map((dataset) => {
-            if (data[dataset.label] !== undefined) {
-                const n_new = data[dataset.label].length;
-                const end_ts = 0;
-                if (n_new > 0) {
-                    end_ts = data[dataset.label][n_new - 1]['x'].valueOf() / 1000.0;
+    getColor(index) {
+        const colorNames = Object.keys(this._colors);
+        const selectedColor = this._colors[colorNames[index % colorNames.length]];
+        return selectedColor;
+    }
+
+    getChartData(datasets) {
+        const newDatasets = datasets.map((dataset, index) => {
+            const color = this.getColor(index);
+            const newDataset = {
+                ...dataset, ...this.initDataset(), ...{
+                    borderColor: color,
+                    pointBorderColor: color,
+                    pointHoverBackgroundColor: color,
+                    pointHoverBorderColor: color,
                 }
-                const start_ts = end_ts
-                if (dataset.data.length != 0) {
-                    start_ts = dataset.data[0]['x'].valueOf() / 1000.0;
-                }
-                if (end_ts - start_ts > duration) { // if there are more than 10s data
-                    const keep_ts_start = end_ts - duration
-                    dataset.data = dataset.data.filter(function (s) { return s['x'].valueOf() / 1000.0 >= keep_ts_start })
-                    console.log('dataset length (after filter) ' + dataset.label + ': ' + dataset.data.length);
-                }
-                dataset.data = dataset.data.concat(data[dataset.label]);
-                console.log('dataset length ' + dataset.label + ': ' + dataset.data.length);
             }
-            return dataset;
+            return newDataset;
         });
-        this.setState({
-            chartData: {
-                datasets: datasets
-            }
-        });
+        return {
+            datasets: newDatasets
+        }
     }
 
     toggleMonitor(e) {
@@ -149,31 +127,36 @@ class SensorMonitor extends React.Component {
     }
 
     connectMonitor(e) {
-        if (!this.state.connected) {
-            this.props.connectSensor(this.props.sensor);
+        if (this.props.sensor.status == 'running') {
+            if (!this.props.sensor.isConnected) {
+                this.props.connectSensor(this.props.sensor);
+            } else {
+                this.props.disconnectSensor(this.props.sensor);
+            }
+        } else {
+            message.error('Please run sensors first before connecting');
         }
-        this.setState({
-            connected: !this.state.connected
-        });
     }
 
     render() {
         const sensor = this.props.sensor;
         const predefinedPlacements = Sensor.PREDEFINED_PLACEMENTS;
+        const chartData = this.getChartData(sensor.datasets);
+        const options = this.getOptions(sensor.dataBufferSize);
         return (
             <div className='sensor-monitor'>
                 <div className='sensor-monitor-control'>
                     <Tooltip title={sensor.address + ", " + sensor.url + ', ' + sensor.status}>
                         <Checkbox checked={this.state.showing} onChange={this.toggleMonitor.bind(this)}><Badge color={sensor.status == 'running' ? 'green' : 'red'} />{predefinedPlacements[sensor.name]}</Checkbox>
                     </Tooltip>
-                    <Button size="small" onClick={this.connectMonitor.bind(this)}>{
-                        this.state.connected ? "Disconnect" : 'Connect'
+                    <Button loading={sensor.isConnecting} size="small" onClick={this.connectMonitor.bind(this)}>{
+                        sensor.isConnected ? "Disconnect" : 'Connect'
                     }</Button>
                 </div>
                 <div className='sensor-monitor-display'>
                     {
-                        !this.state.connected ? (this.state.showing && <Empty />) :
-                            (this.state.showing && <Line data={this.state.chartData} options={this.options} />)
+                        !sensor.isConnected ? (this.state.showing && <Empty />) :
+                            (this.state.showing && <Line data={chartData} options={options} />)
                     }
                 </div>
             </div>

@@ -1,5 +1,5 @@
 #step-run-processor {
-    width: 90%;
+    width: 100%;
     margin: 0 auto;
     margin-top: 30px;
 }
@@ -19,8 +19,12 @@
 .processor-monitors {
     display: flex;
     flex-direction: row;
+    width: 100%;
+    overflow: auto;
+    margin: 0 auto;
 }
 
-.user-monitors, .expert-monitors {
-    flex: 1;
+.user-monitors {
+    width: 100%;
+    margin: 0 auto;
 }

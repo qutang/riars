@@ -1,114 +1,135 @@
 
-class ProcessorWorker {
-    constructor(host, port, updateRate) {
-        this._host = host;
-        this._port = port;
-        this._updateRate = updateRate;
-        this._transformedData = [];
-        this._ws = undefined;
-        this._broadcoaster = undefined;
-    }
 
-    get host() {
-        return this._host;
-    }
-
-    get port() {
-        return this._port;
-    }
-
-    get transformedData() {
-        return this._transformedData;
-    }
-
-    set transformedData(data) {
-        this._transformedData = data;
-    }
-
-    getWebSocketUrl() {
-        return 'ws://' + this.host + ':' + this.port;
-    }
-
-    postData() {
-        if (this.transformedData != undefined && this.transformedData.length > 0) {
-            const message = {
-                action: 'data',
-                content: this.transformedData
-            };
-
-            postMessage(message);
-            this.clearData();
-        }
-    }
-
-    clearData() {
+const buildProcessorWorker = function () {
+    const ProcessorWorker = function (host, port, updateRate) {
+        this.host = host;
+        this.port = port;
+        this.updateRate = updateRate;
         this.transformedData = [];
-    }
+        this.ws = undefined;
+        this.broadcoaster = undefined;
 
-    onOpenWebSocket(e) {
-        console.log('Connected to ' + wsUrl);
-        this._broadcaster = setInterval(this.postData.bind(this), this.updateRate * 1000);
-    }
 
-    onWebSocketError(e) {
-        console.log(e);
-        this.stop();
-        close();
-    }
+        this.getWebSocketUrl = function () {
+            return 'ws://' + this.host + ':' + this.port;
+        }
 
-    onWebSocketMessage(e) {
-        const data = JSON.parse(e.data);
-        const transformed = this.transformData(data);
-        this.transformData.push(transformed);
-    }
+        this.postData = function () {
 
-    transformData(data) {
-        return data;
-    }
+            if (this.transformedData != undefined && this.transformedData.length > 0) {
+                console.log(this.transformedData);
+                const message = {
+                    action: 'data',
+                    content: this.transformedData.slice(0)
+                };
 
-    start() {
-        const wsUrl = this.getWebSocketUrl();
-        this._ws = new WebSocket(wsUrl);
-        this._ws.addEventListener('open', this.onOpenWebSocket.bind(this));
-        this._ws.addEventListener('error', this.onWebSocketError.bind(this));
-        this._ws.addEventListener('message', this.onWebSocketMessage.bind(this));
-    }
+                postMessage(message);
+                this.clearData();
+            }
+        }
 
-    stop() {
-        clearInterval(this._broadcaster);
-        this._broadcaster = undefined;
-        this._ws.close();
-        this.postData();
-    }
-}
+        this.clearData = function () {
+            this.transformedData = [];
+        }
 
-let processorWorker = undefined;
+        this.onOpenWebSocket = function (e) {
+            console.log('Connected to ' + this.getWebSocketUrl());
+            this._broadcaster = setInterval(this.postData.bind(this), this.updateRate * 1000);
+        }
 
-// web worker methods
-onmessage = function (e) {
-    if (e.data['action'] == 'start') {
-        console.log('Start processor worker');
-        const host = e.data['host'];
-        const port = e.data['port'];
-        const updateRate = e.data['update_rate'];
-        console.log('Received: ' + host + ", " + port + ", " + updateRate);
-        processorWorker = new processorWorker(host, port, updateRate);
-        console.log('Created processor worker for ' + processorWorker.getWebSocketUrl());
-        processorWorker.run();
-    } else if (e.data['action'] == 'stop') {
-        processorWorker.stop();
-        console.log('stop server: ' + processorWorker.getWebSocketUrl());
-    }
-}
+        this.onWebSocketError = function (e) {
+            console.error(e);
+            this.stop();
+        }
 
-onerror = function (e) {
-    const message = {
-        action: 'error',
-        content: e
+        this.onWebSocketMessage = function (e) {
+            const data = JSON.parse(e.data);
+            const transformed = this.transformData(data);
+            this.addTransformedData(transformed);
+        }
+
+        this.addTransformedData = function (newTransformed) {
+            let data = this.transformedData;
+
+            if (data != undefined) {
+                data.push(newTransformed);
+            } else {
+                data = [newTransformed];
+            }
+            this.transformedData = data;
+        }
+
+        this.transformData = function (data) {
+            const fields = Object.keys(data);
+            const transformed = {};
+            fields.forEach(function (field, index) {
+                if (field.includes('START_TIME') || field.includes('STOP_TIME') || field.includes('INDEX')) {
+                    transformed[field] = data[field];
+                    // TODO: broadcast and finally add vertical lines to raw data chart
+                } else if (field.includes('FEATURE')) {
+                    // TODO: do not need to know features for now
+                } else if (field.includes('PREDICTION')) {
+                    const taskName = field.split('_PREDICTION')[0];
+                    const classNames = Object.keys(data[field][0]).filter(name => name.endsWith('PREDICTION'));
+                    const predictionSet = classNames.map(className => {
+                        const displayClassName = className.split('_PREDICTION')[0].split(taskName + '_')[1];
+                        return { x: data[field][0]['STOP_TIME'], y: data[field][0][className], label: displayClassName }
+                    });
+                    transformed['prediction'] = predictionSet;
+                } else {
+                    throw new Error('Unrecognized filed: ' + field)
+                }
+            });
+            return transformed;
+        }
+
+        this.start = function () {
+            const wsUrl = this.getWebSocketUrl();
+            this._ws = new WebSocket(wsUrl);
+            this._ws.addEventListener('open', this.onOpenWebSocket.bind(this));
+            this._ws.addEventListener('error', this.onWebSocketError.bind(this));
+            this._ws.addEventListener('message', this.onWebSocketMessage.bind(this));
+        }
+
+        this.stop = function () {
+            clearInterval(this._broadcaster);
+            this._broadcaster = undefined;
+            this._ws.close();
+            this.postData();
+            postMessage({
+                action: 'stopped'
+            });
+        }
     };
-    postMessage(message);
-    console.log('Error on processor worker');
-    console.log(e);
-    processorWorker.stop();
-    close();
+    let worker = undefined;
+    // web worker methods
+    self.addEventListener('message', (e) => {
+        if (e.data['action'] == 'start') {
+            console.log('Start processor worker');
+            const host = e.data['host'];
+            const port = e.data['port'];
+            const updateRate = e.data['update_rate'];
+            console.log('Received: ' + host + ", " + port + ", " + updateRate);
+            worker = new ProcessorWorker(host, port, updateRate);
+            console.log('Created processor worker for ' + worker.getWebSocketUrl());
+            worker.start();
+        } else if (e.data['action'] == 'stop') {
+            worker.stop();
+            console.log('stop server: ' + worker.getWebSocketUrl());
+        }
+    });
+
+    self.addEventListener('error', (e) => {
+        const message = {
+            action: 'error',
+            content: e
+        };
+        postMessage(message);
+        console.log('Error on processor worker');
+        console.log(e);
+        worker.stop();
+        close();
+    });
 }
+
+export default buildProcessorWorker;

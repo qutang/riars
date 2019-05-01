@@ -13,6 +13,10 @@ class Sensor {
         this._errorCode = undefined
         this._webworker = undefined
         this._refreshRate = 1
+        this._datasets = []
+        this._dataBufferSize = 12.8
+        this._isConnected = false
+        this._isConnecting = false
     }
 
     static get PREDEFINED_PLACEMENTS() {
@@ -33,6 +37,24 @@ class Sensor {
         return foundSensor.length > 0 ? foundSensor[0] : undefined;
     }
 
+    update(anotherSensor) {
+        this.selected = anotherSensor.selected;
+        this.name = anotherSensor.name || this.name;
+        this.port = anotherSensor.port || this.port;
+        this.host = anotherSensor.host || this.port;
+        this.samplingRate = anotherSensor.samplingRate || this.samplingRate;
+        this.dynamicRange = anotherSensor.dynamicRange || this.dynamicRange;
+        this.status = anotherSensor.status || this.status;
+        this.order = anotherSensor.order || this.order;
+        this.errorCode = anotherSensor.errorCode || this.errorCode;
+        this.webworker = this.webworker == undefined ? anotherSensor.webworker : this.webworker;
+        this.refreshRate = anotherSensor.refreshRate || this.refreshRate;
+        this.datasets = anotherSensor.datasets || this.datasets;
+        this.isConnected = anotherSensor.isConnected == undefined ? this.isConnected : anotherSensor.isConnected;
+        this.dataBufferSize = anotherSensor.dataBufferSize || this.dataBufferSize;
+        this.isConnecting = anotherSensor.isConnecting == undefined ? this.isConnecting : anotherSensor.isConnecting;
+    }
+
     clone() {
         const sensor = new Sensor(this.address);
         sensor.selected = this.selected;
@@ -46,7 +68,42 @@ class Sensor {
         sensor.errorCode = this.errorCode;
         sensor.webworker = this.webworker;
         sensor.refreshRate = this.refreshRate;
+        sensor.datasets = this.datasets;
+        sensor.isConnected = this.isConnected;
+        sensor.dataBufferSize = this.dataBufferSize;
         return sensor;
+    }
+
+    get isConnecting() {
+        return this._isConnecting;
+    }
+
+    set isConnecting(value) {
+        this._isConnecting = value;
+    }
+
+    get dataBufferSize() {
+        return this._dataBufferSize;
+    }
+
+    set dataBufferSize(value) {
+        this._dataBufferSize = value;
+    }
+
+    get isConnected() {
+        return this._isConnected;
+    }
+
+    set isConnected(value) {
+        this._isConnected = value;
+    }
+
+    get datasets() {
+        return this._datasets;
+    }
+
+    set datasets(value) {
+        this._datasets = value;
     }
 
     get refreshRate() {
@@ -150,8 +207,8 @@ class Sensor {
     }
 
     toTable() {
-        let { selected, order, address, name, host, port, samplingRate, dynamicRange, status, errorCode } = this;
-        return { selected, order, address, name, host, port, samplingRate, dynamicRange, status, errorCode }
+        let { selected, order, address, name, host, port, samplingRate, dynamicRange, status, errorCode, webworker, refreshRate, datasets, dataBufferSize, isConnected } = this;
+        return { selected: String(selected), order, address, name, host, port, samplingRate, dynamicRange, status, errorCode, webworker: String(webworker != undefined), refreshRate, datasets: datasets.length, dataBufferSize, isConnected: String(isConnected) }
     }
 
     toJSON() {

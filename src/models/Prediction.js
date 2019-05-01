@@ -6,8 +6,29 @@ class Prediction {
         this._startTime = moment();
         this._stopTime = this._startTime.clone();
         this._stopTime.add(12.8, 's');
+        this._refreshRate = 1;
         this._correction = undefined;
         this._correctionNote = undefined;
+    }
+
+    static get PREDEFINED_CLASS_ABBR() {
+        return {
+            'BIKING': '🚴‍',
+            'BRISK WALKING': 'Brisk 🚶',
+            'RUNNING': '🏃‍️',
+            'NORMAL WALKING': 'Normal 🚶',
+            'LYING': '🛌',
+            'SITTING': 'Sit',
+            'SITTING AND TYPING ON A KEYBOARD': 'Sit typing 💻',
+            'SITTING AND WRITING': 'Sit ✍',
+            'SLOW WALKING': 'Slow 🚶',
+            'STANDING AND FOLDING TOWELS': '🕴 folding 👕',
+            'STANDING AND SWEEPING': '🕴 sweep',
+            'STANDING LOADING/UNLOADING SHELF': '🕴 loading 📚',
+            'UNKNOWN': '❓',
+            'STANDING': '🕴'
+
+        }
     }
 
     clone() {
@@ -23,6 +44,7 @@ class Prediction {
         newPrediction.stopTime = this.stopTime;
         newPrediction.correction = this.correction;
         newPrediction.correctionNote = this.correctionNote;
+        newPrediction.refreshRate = this.refreshRate;
         return newPrediction;
     }
 
@@ -38,6 +60,14 @@ class Prediction {
             prediction.score == score
         })[0];
         return prediction;
+    }
+
+    get refreshRate() {
+        return this._refreshRate
+    }
+
+    set refreshRate(value) {
+        this._refreshRate = value;
     }
 
     get duration() {
@@ -113,6 +143,14 @@ class Prediction {
         const topN = new Prediction(sorted.slice(0, n - 1));
         const copied = Prediction.copy(topN);
         return copied.immutablePrediction;
+    }
+
+    static fromJSON(jsonData) {
+        const predictionSet = jsonData.prediction.map(p => { return { label: p.label, score: p.y } });
+        const prediction = new Prediction(predictionSet);
+        prediction.startTime = jsonData['START_TIME'];
+        prediction.stopTime = jsonData['STOP_TIME'];
+        return prediction;
     }
 }
 
