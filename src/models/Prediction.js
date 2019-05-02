@@ -19,7 +19,7 @@ class Prediction {
             'NORMAL WALKING': 'Normal 🚶',
             'LYING': '🛌',
             'SITTING': 'Sit',
-            'SITTING AND TYPING ON A KEYBOARD': 'Sit typing 💻',
+            'SITTING AND TYPING ON A KEYBOARD': 'Sit 💻',
             'SITTING AND WRITING': 'Sit ✍',
             'SLOW WALKING': 'Slow 🚶',
             'STANDING AND FOLDING TOWELS': '🕴 folding 👕',
@@ -32,7 +32,7 @@ class Prediction {
     }
 
     clone() {
-        const predictionSet = this.immutablePrediction
+        const predictionSet = this.prediction;
         const clonedPredictionSet = predictionSet.map((pr) => {
             return {
                 label: pr.label,
@@ -70,7 +70,7 @@ class Prediction {
         this._refreshRate = value;
     }
 
-    get duration() {
+    computeDuration() {
         return Math.round((this._stopTime - this._startTime) / 100.0) / 10.0;
     }
 
@@ -106,43 +106,48 @@ class Prediction {
         this._stopTime = value
     }
 
-    get scores() {
+    getScores() {
         return this._prediction.map((prediction) => prediction.score);
     }
 
-    get labels() {
+    getLabels() {
         return this._prediction.map((prediction) => prediction.label);
     }
 
-    get immutablePrediction() {
+    get prediction() {
         return this._prediction;
     }
 
     getMostProbable() {
-        const scores = this.scores;
+        const scores = this.getScores();
         const maxScore = Math.max(...scores);
         const prediction = this.getPredictionByScore(maxScore);
         return prediction;
     }
 
     static copy(another) {
-        const scores = another.scores;
-        const labels = another.labels;
+        const scores = another.getScores();
+        const labels = another.getLabels();
         const newPrediction = scores.map((score, index) => {
             return {
                 label: labels[index],
                 score: score
             }
         });
-        return new Prediction(newPrediction);
+        const newCopy = new Prediction(newPrediction);
+        newCopy.startTime = another.startTime;
+        newCopy.stopTime = another.stopTime;
+        newCopy.correction = another.correction;
+        newCopy.correctionNote = another.correctionNote;
+        return newCopy;
     }
 
     getTopN(n = 5) {
-        const sorted = this._prediction.slice(0);
+        const sorted = this.prediction.slice(0);
         sorted.sort((a, b) => b.score - a.score);
         const topN = new Prediction(sorted.slice(0, n - 1));
         const copied = Prediction.copy(topN);
-        return copied.immutablePrediction;
+        return copied.prediction;
     }
 
     static fromJSON(jsonData) {
@@ -151,6 +156,25 @@ class Prediction {
         prediction.startTime = jsonData['START_TIME'];
         prediction.stopTime = jsonData['STOP_TIME'];
         return prediction;
+    }
+
+    toJSON() {
+        const { startTime, stopTime, correction, correctionNote } = this;
+        return {
+            start_time: startTime,
+            stop_time: stopTime,
+            label_name: correction,
+            note: correctionNote
+        }
+    }
+
+    static convertToJSONAnnotations(predictions, id) {
+        const jsonObj = predictions.map(prediction => {
+            const newJson = prediction.toJSON();
+            newJson.id = id;
+            return newJson;
+        });
+        return jsonObj;
     }
 }
 

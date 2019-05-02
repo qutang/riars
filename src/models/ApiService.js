@@ -2,6 +2,7 @@ import axios from 'axios';
 import Subject from './Subject';
 import Sensor from './Sensor';
 import Processor from './Processor';
+import Prediction from './Prediction';
 
 class ApiService {
     constructor() {
@@ -248,7 +249,7 @@ class ApiService {
     }
 
     connectProcessor(processor, callback) {
-        processor.webworker.addEventListener('message', (e) => {
+        const handleWebworkerMessage = function (e) {
             if (e.data.action == 'error') {
                 callback('error');
             } else if (e.data.action == 'data') {
@@ -256,9 +257,13 @@ class ApiService {
                     callback(e.data.content);
                 }
             } else if (e.data.action == 'stopped') {
+                processor.webworker.removeEventListener('message', handleWebworkerMessage);
                 callback('stopped');
             }
-        });
+        };
+
+        processor.webworker.addEventListener('message', handleWebworkerMessage);
+
         processor.webworker.postMessage({
             'action': 'start',
             'host': processor.host,
@@ -291,6 +296,20 @@ class ApiService {
                 callback(processor, 200);
             } else {
                 callback(undefined, response.status)
+            }
+        });
+    }
+
+    uploadPredictions(predictions, id, callback) {
+        const ps = predictions.slice(0);
+        const annotationApiUrl = this.getUrl() + '/api/annotations';
+        const requestData = Prediction.convertToJSONAnnotations(ps, id);
+        console.log(requestData);
+        axios.put(annotationApiUrl, requestData).then(response => {
+            if (response.status == 200) {
+                callback('success');
+            } else {
+                callback(response.status);
             }
         });
     }

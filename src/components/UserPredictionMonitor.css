@@ -11,21 +11,42 @@
 }
 
 .current-prediction {
-    display: flex;
-    flex-direction: column;
     width: 24%;
     margin-left: 5px;
 }
 
-.prediction-tag {
-    display: block;
-    width: 100%;
+.prediction-list {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
 }
+
+.prediction-tag {
+    width: 50%;
+    display: block;
+}
+
+.user-prediction-monitor-control {
+    width: 60%;
+    margin: 0 auto;
+    text-align: center;
+}
+
 
 .prediction-tag > div {
     width: 100%;
+    padding: 0.8em 0.3em;
+    font-size: 1.3em;
+    text-align: center;
 }
 
 .prediction-note {
     margin-bottom: 5px;
+}
+
+.now-panel {
+    border-left: 2px solid rgb(16,142,233);
+    margin-left: 5px;
+    padding-left: 5px;
+    width: 24%;
 }

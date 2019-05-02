@@ -103,23 +103,26 @@ const buildProcessorWorker = function () {
     };
     let worker = undefined;
     // web worker methods
-    self.addEventListener('message', (e) => {
+
+    const handleWebworkerMessage = function (e) {
         if (e.data['action'] == 'start') {
             console.log('Start processor worker');
             const host = e.data['host'];
             const port = e.data['port'];
             const updateRate = e.data['update_rate'];
             console.log('Received: ' + host + ", " + port + ", " + updateRate);
-            worker = new ProcessorWorker(host, port, updateRate);
-            console.log('Created processor worker for ' + worker.getWebSocketUrl());
+            if (worker == undefined) {
+                worker = new ProcessorWorker(host, port, updateRate);
+                console.log('Created processor worker for ' + worker.getWebSocketUrl());
+            }
             worker.start();
         } else if (e.data['action'] == 'stop') {
             worker.stop();
             console.log('stop server: ' + worker.getWebSocketUrl());
         }
-    });
+    }
 
-    self.addEventListener('error', (e) => {
+    const handleWebworkerError = function (e) {
         const message = {
             action: 'error',
             content: e
@@ -128,8 +131,9 @@ const buildProcessorWorker = function () {
         console.log('Error on processor worker');
         console.log(e);
         worker.stop();
-        close();
-    });
+    }
+    self.addEventListener('message', handleWebworkerMessage);
+    self.addEventListener('error', handleWebworkerError);
 }
 
 export default buildProcessorWorker;

@@ -21,11 +21,11 @@ class PredictionTagGroup extends React.Component {
 
     render() {
         const prediction = this.props.prediction;
-        const predictionList = prediction.immutablePrediction;
+        const predictionList = prediction.prediction;
         const isPast = this.props.isPast;
         return (
             <div className='prediction-list'>
-                <Input className='prediction-note' placeholder='Type notes' onChange={this.addNote.bind(this)} onPressEnter={this.addNote.bind(this)} defaultValue={prediction.correctionNote}></Input>
+                <Input className='prediction-note' placeholder='Type notes' onChange={this.addNote.bind(this)} onPressEnter={this.addNote.bind(this)} value={prediction.correctionNote}></Input>
                 {
                     predictionList.map((pr) => {
                         const flag = pr.label == prediction.correction ? 'green' : 'red';

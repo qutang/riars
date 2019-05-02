@@ -156,7 +156,7 @@ class SensorMonitor extends React.Component {
                 <div className='sensor-monitor-display'>
                     {
                         !sensor.isConnected ? (this.state.showing && <Empty />) :
-                            (this.state.showing && <Line data={chartData} options={options} />)
+                            (this.state.showing && <Line data={chartData} options={options} height={500} />)
                     }
                 </div>
             </div>

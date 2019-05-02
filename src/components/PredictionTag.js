@@ -15,11 +15,12 @@ class PredictionTag extends React.Component {
     render() {
         const past = this.props.past;
         const pr = this.props.pr;
+        const flag = this.props.flag == 'red' ? 'white' : 'green';
         return (
-            <a className='prediction-tag' onClick={this.correctLabel.bind(this)}><Tag
+            <a className='prediction-tag' onClick={this.correctLabel.bind(this)}  ><Tag
                 className='prediction-tag-tag'
                 color={past ? "rgba(191, 191, 191, " + pr.score + ')' : "rgba(16,142,233," + pr.score + ')'}
-                style={{ color: 'black', fontWeight: "bold", fontSize: "1.2em", padding: "0.3em" }} > <Badge color={this.props.flag} style={{ opactiy: 1 }} />{Prediction.PREDEFINED_CLASS_ABBR[pr.label] ? Prediction.PREDEFINED_CLASS_ABBR[pr.label] : pr.label}</Tag></a>
+                style={{ color: 'black', fontWeight: "bold", border: "2px solid " + flag }} >{Prediction.PREDEFINED_CLASS_ABBR[pr.label] ? Prediction.PREDEFINED_CLASS_ABBR[pr.label] : pr.label}</Tag></a>
         )
     }
 }

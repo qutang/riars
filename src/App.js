@@ -35,7 +35,8 @@ class App extends React.Component {
             isStoppingProcessor: false,
             accelerometerSamplingRate: 50,
             accelerometerDynamicRange: 8,
-            predictions: []
+            predictions: [],
+            numOfPastPredictions: 3
         }
     }
 
@@ -509,7 +510,6 @@ class App extends React.Component {
                                 updatedPredictions = newPredictions;
                             } else {
                                 updatedPredictions = existingPredictions.concat(newPredictions);
-                                updatedPredictions = updatedPredictions.slice(Math.max(updatedPredictions.length - 10, 0), updatedPredictions.length)
                             }
                             this.setState({
                                 isStartingProcessor: false,
@@ -551,6 +551,17 @@ class App extends React.Component {
                         processors: updatedProcessors
                     });
                     this.state.apiService.disconnectProcessor(processor);
+                    message.success('uploading annotations...')
+                    this.state.apiService.uploadPredictions(this.state.predictions, processor.name, (m) => {
+                        if (m == 'success') {
+                            message.success('uploaded annotations...')
+                        } else {
+                            message.error('failed to upload annotations!')
+                        }
+                        this.setState({
+                            predictions: []
+                        });
+                    });
                 } else {
                     message.error('Failed to stop selected processor');
                 }
@@ -581,6 +592,12 @@ class App extends React.Component {
         })
         this.setState({
             predictions: updatedPredictions
+        });
+    }
+
+    changeNumOfPastPredictions(value) {
+        this.setState({
+            numOfPastPredictions: value
         });
     }
 
@@ -629,7 +646,7 @@ class App extends React.Component {
             title: 'Run and monitor',
             subTitle: 'start experiment session',
             description: 'Use the "Processors" tab to review the settings of different processors and confirm the selected processor. Click "Submit settings and run the processor" to start running the processor and generate predictions. Click "Stop the processor" to stop the running processor. On the left monitor panel, you may see the visualization display that is optimized for experts; on the right monitor panel, you may see the visualization display shown to the subject (novice user).',
-            content: <RunProcessor runProcessor={this.runProcessor.bind(this)} stopProcessor={this.stopProcessor.bind(this)} isStartingProcessor={this.state.isStartingProcessor} isStoppingProcessor={this.state.isStoppingProcessor} predictions={this.state.predictions} correctLabel={this.correctLabel.bind(this)} addPredictionNote={this.addPredictionNote.bind(this)} />,
+            content: <RunProcessor runProcessor={this.runProcessor.bind(this)} stopProcessor={this.stopProcessor.bind(this)} isStartingProcessor={this.state.isStartingProcessor} isStoppingProcessor={this.state.isStoppingProcessor} predictions={this.state.predictions} numOfPastPredictions={this.state.numOfPastPredictions} correctLabel={this.correctLabel.bind(this)} addPredictionNote={this.addPredictionNote.bind(this)} changeNumOfPastPredictions={this.changeNumOfPastPredictions.bind(this)} />,
             validateNext: () => null,
             validateBack: () => null
         }];
