@@ -115,7 +115,32 @@ class ApiService {
     }
 
     scanSensors(callback) {
-        const sensorApiUrl = this.getUrl() + '/api/sensors';
+        const sensorApiUrl = this.getUrl() + '/api/sensors?scan=1';
+        axios.get(sensorApiUrl).then(response => {
+            if (response.status == 200) {
+                const devicesJson = response.data;
+                const sensors = devicesJson.map((deviceJson, index) => {
+                    const sensor = Sensor.fromJSON(deviceJson);
+                    if (sensor.status == 'running') {
+                        sensor.host = deviceJson.host;
+                        sensor.selected = true;
+                        sensor.order = deviceJson.order;
+                    } else {
+                        sensor.host = 'localhost';
+                        sensor.port = 8000;
+                        sensor.order = sensor.port;
+                    }
+                    return sensor;
+                });
+                callback(sensors, 200);
+            } else {
+                callback([], response.status)
+            }
+        });
+    }
+
+    queryExistingSensors(callback) {
+        const sensorApiUrl = this.getUrl() + '/api/sensors?scan=0';
         axios.get(sensorApiUrl).then(response => {
             if (response.status == 200) {
                 const devicesJson = response.data;

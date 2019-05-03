@@ -25,7 +25,6 @@
 .sensor-monitor {
     display: flex;
     flex-direction: column;
-    flex: 1;
 }
 
 .sensor-monitor-control {

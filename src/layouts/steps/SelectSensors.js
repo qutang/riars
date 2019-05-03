@@ -15,6 +15,10 @@ class SelectSensors extends React.Component {
         this.props.onSubmit(checkedList);
     }
 
+    componentDidMount() {
+        // this.props.querySensors();
+    }
+
     render() {
         const sensorOptions = this.props.sensors.map((sensor) => {
             return {

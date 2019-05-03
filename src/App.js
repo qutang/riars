@@ -69,6 +69,7 @@ class App extends React.Component {
             });
             if (success) {
                 this.querySubjects();
+                this.queryExistingSensors();
             }
         });
     }
@@ -162,6 +163,31 @@ class App extends React.Component {
                 });
             } else {
                 message.error('Failed to scan sensors');
+            }
+        });
+    }
+
+    queryExistingSensors() {
+        const existingSensors = this.state.sensors;
+        const connectedSensors = existingSensors.filter(s => s.isConnected);
+        if (connectedSensors.length > 0) {
+            return;
+        }
+        this.state.apiService.queryExistingSensors((sensors, status) => {
+            if (status == 200) {
+                const existingSensors = this.state.sensors;
+                const updatedSensors = Sensor.merge(existingSensors, sensors).map(s => {
+                    if (!s.webworker) {
+                        s.webworker = new WebWorker(buildSensorWorker);
+                    }
+                    return s.clone();
+                });
+                console.log(updatedSensors);
+                this.setState({
+                    sensors: updatedSensors
+                });
+            } else {
+                message.error('Failed to query sensors');
             }
         });
     }
@@ -615,7 +641,8 @@ class App extends React.Component {
                 changeAccelerometerDynamicRange={this.changeAccelerometerDynamicRange.bind(this)}
                 changeSensorPlacement={this.changeSensorPlacement.bind(this)}
                 changeSensorPort={this.changeSensorPort.bind(this)}
-                scanSensors={this.scanSensors.bind(this)} />,
+                scanSensors={this.scanSensors.bind(this)}
+                querySensors={this.queryExistingSensors.bind(this)} />,
             validateNext: () => null,
             validateBack: () => null
         }, {

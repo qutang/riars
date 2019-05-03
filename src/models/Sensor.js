@@ -74,6 +74,29 @@ class Sensor {
         return sensor;
     }
 
+    static merge(sensorsA, sensorsB) {
+        const addressesA = sensorsA.map(s => s.address);
+        const addressesB = sensorsB.map(s => s.address);
+        const unionAddresses = Array.from(new Set([...addressesA, ...addressesB]));
+        console.log(unionAddresses);
+        const merged = unionAddresses.map(address => {
+            const foundA = Sensor.find(address, sensorsA);
+            const foundB = Sensor.find(address, sensorsB);
+            let result = undefined;
+            if (foundA && foundB) {
+                foundA.update(foundB);
+                result = foundA.clone();
+            } else if (foundA && !foundB) {
+                result = foundA.clone();
+            } else if (!foundA && foundB) {
+                result = foundB.clone();
+            }
+            return result;
+        });
+        console.log(merged);
+        return merged;
+    }
+
     get isConnecting() {
         return this._isConnecting;
     }
