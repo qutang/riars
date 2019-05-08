@@ -38,7 +38,7 @@ class Sensor {
     }
 
     update(anotherSensor) {
-        this.selected = anotherSensor.selected;
+        this.selected = this.selected || anotherSensor.selected;
         this.name = anotherSensor.name || this.name;
         this.port = anotherSensor.port || this.port;
         this.host = anotherSensor.host || this.port;

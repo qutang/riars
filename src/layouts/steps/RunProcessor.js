@@ -19,7 +19,7 @@ class RunProcessor extends React.Component {
                     <div className='expert-monitors'>
                     </div>
                     <div className='user-monitors'>
-                        <UserPredictionMonitor predictions={this.props.predictions} numOfPastPredictions={this.props.numOfPastPredictions} changeNumOfPastPredictions={this.props.changeNumOfPastPredictions} correctLabel={this.props.correctLabel}
+                        <UserPredictionMonitor predictions={this.props.predictions} processors={this.props.processors} numOfPastPredictions={this.props.numOfPastPredictions} changeNumOfPastPredictions={this.props.changeNumOfPastPredictions} correctLabel={this.props.correctLabel}
                             addPredictionNote={this.props.addPredictionNote.bind(this)} />
                     </div>
                 </div>
