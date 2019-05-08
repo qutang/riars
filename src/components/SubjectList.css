@@ -7,7 +7,21 @@
 }
 
 .create-subject-item {
-    display: block;
+    display: flex;
+    flex-direction: row;
     margin-bottom: 5px;
+    margin-top: 5px;
+    width: 100%;
+}
+
+.create-subject-item > span {
+    width: 110px;
+    text-align: right;
+    margin-right: 10px;
+    padding-top: 5px;
+}
+
+.create-subject-item-control {
+    flex: 1;
     width: 100%;
 }

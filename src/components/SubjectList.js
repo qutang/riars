@@ -11,7 +11,12 @@ class SubjectList extends React.Component {
         this.newSubjSetting = {
             id: undefined,
             age: 18,
-            gender: 'Male'
+            gender: 'Male',
+            weight: 60,
+            height: 1.80,
+            dress: 'Business Casual',
+            shoes: 'Sneakers',
+            dominantSide: 'Right'
         }
     }
 
@@ -72,7 +77,7 @@ class SubjectList extends React.Component {
                     title="Create a new subject"
                     visible={this.state.visible}
                 >
-                    <Input className='create-subject-item'
+                    <Input className='create-subject-item-control'
                         defaultValue={this.state.defaultSelection}
                         placeholder="Enter a new subject ID"
                         onChange={(e) => {
@@ -85,30 +90,130 @@ class SubjectList extends React.Component {
                             </Tooltip>
                         }
                     />
-                    <InputNumber className='create-subject-item'
-                        onChange={(value) => {
-                            this.newSubjSetting.age = value;
-                        }}
-                        placeholder="Enter age"
-                        min={18}
-                        max={100}
-                        step={1}
-                        defaultValue={18}
-                    />
+                    <div className='create-subject-item'>
+                        <span>Age</span>
+                        <InputNumber className='create-subject-item-control'
+                            onChange={(value) => {
+                                this.newSubjSetting.age = value;
+                            }}
+                            placeholder="Enter age"
+                            min={18}
+                            max={100}
+                            step={1}
+                            defaultValue={18}
+                        />
+                    </div>
 
-                    <Select className='create-subject-item' defaultValue="Male" onChange={(value) => {
-                        this.newSubjSetting.gender = value;
-                    }}>
-                        <Option value="Male">
-                            Male
+                    <div className='create-subject-item'>
+                        <span>Gender</span>
+                        <Select className='create-subject-item-control' defaultValue="Male" onChange={(value) => {
+                            this.newSubjSetting.gender = value;
+                        }}>
+                            <Option value="Male">
+                                Male
                         </Option>
-                        <Option value="Female">
-                            Female
+                            <Option value="Female">
+                                Female
                         </Option>
-                        <Option value="Other">
-                            Other
+                            <Option value="Other">
+                                Other
                         </Option>
-                    </Select>
+                        </Select>
+                    </div>
+
+                    <div className='create-subject-item'>
+                        <span>Weight (kg)</span>
+                        <InputNumber className='create-subject-item-control'
+                            onChange={(value) => {
+                                this.newSubjSetting.weight = value;
+                            }}
+                            placeholder="Enter weight (kg)"
+                            min={0}
+                            max={150}
+                            step={1}
+                            defaultValue={60}
+                        />
+                    </div>
+
+                    <div className="create-subject-item">
+                        <span>Height (meter)</span>
+                        <InputNumber className='create-subject-item-control'
+                            onChange={(value) => {
+                                this.newSubjSetting.height = value;
+                            }}
+                            placeholder="Enter height (meter)"
+                            min={0.00}
+                            max={2.50}
+                            step={0.01}
+                            defaultValue={1.80}
+                        />
+                    </div>
+
+                    <div className="create-subject-item">
+                        <span>Dress</span>
+                        <Select className='create-subject-item-control' defaultValue="Business casual" onChange={(value) => {
+                            this.newSubjSetting.dress = value;
+                        }}>
+                            <Option value="Business cansual">
+                                Business cansual
+                            </Option>
+                            <Option value="Sportswear">
+                                Sportswear
+                            </Option>
+                            <Option value="Formal">
+                                Formal
+                            </Option>
+                            <Option value="Winter clothing">
+                                Winter clothing
+                            </Option>
+                            <Option value="Others">
+                                Others
+                            </Option>
+                        </Select>
+                    </div>
+
+                    <div className="create-subject-item">
+                        <span>Shoes</span>
+                        <Select className='create-subject-item-control' defaultValue="Sneakers" onChange={(value) => {
+                            this.newSubjSetting.shoes = value;
+                        }}>
+                            <Option value="Sneakers">
+                                Sneakers
+                            </Option>
+                            <Option value="Boots">
+                                Boots
+                            </Option>
+                            <Option value="Casual Leather">
+                                Casual Leather
+                            </Option>
+                            <Option value="Formal">
+                                Formal
+                            </Option>
+                            <Option value="High heels">
+                                High heels
+                            </Option>
+                            <Option value="Others">
+                                Others
+                            </Option>
+                        </Select>
+                    </div>
+
+                    <div className="create-subject-item">
+                        <span>Dominant side</span>
+                        <Select className='create-subject-item-control' defaultValue="Right" onChange={(value) => {
+                            this.newSubjSetting.dominantSide = value;
+                        }}>
+                            <Option value="Right">
+                                Right
+                            </Option>
+                            <Option value="Left">
+                                Left
+                            </Option>
+                            <Option value="Unknown">
+                                Unknown
+                            </Option>
+                        </Select>
+                    </div>
                 </Modal>
             </div>
         )
