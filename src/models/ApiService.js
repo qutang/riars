@@ -327,8 +327,31 @@ class ApiService {
 
     uploadPredictions(predictions, id, callback) {
         const ps = predictions.slice(0);
+        const predictionApiUrl = this.getUrl() + '/api/annotations';
+        const predictionJson = Prediction.convertToJSONAnnotations(ps)
+        const requestData = {
+            data: predictionJson,
+            id: id,
+            type: 'correction'
+        }
+        console.log(requestData);
+        axios.put(predictionApiUrl, requestData).then(response => {
+            if (response.status == 200) {
+                callback('success');
+            } else {
+                callback(response.status);
+            }
+        });
+    }
+
+    uploadAnnotations(annotations, id, callback) {
+        const ps = annotations.slice(0);
         const annotationApiUrl = this.getUrl() + '/api/annotations';
-        const requestData = Prediction.convertToJSONAnnotations(ps, id);
+        const requestData = {
+            data: ps,
+            id: id,
+            type: 'annotation'
+        };
         console.log(requestData);
         axios.put(annotationApiUrl, requestData).then(response => {
             if (response.status == 200) {

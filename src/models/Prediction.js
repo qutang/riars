@@ -31,6 +31,25 @@ class Prediction {
         }
     }
 
+    static get PREDEFINED_CLASS_TEXT() {
+        return {
+            'BIKING': 'biking',
+            'BRISK WALKING': 'walking briskly',
+            'RUNNING': 'running',
+            'NORMAL WALKING': 'walking normally',
+            'LYING': 'lying down',
+            'SITTING': 'sitting',
+            'SITTING AND TYPING ON A KEYBOARD': 'sitting and using a computer',
+            'SITTING AND WRITING': 'sitting and writing',
+            'SLOW WALKING': 'walking slowly',
+            'STANDING AND FOLDING TOWELS': 'standing and folding laundries',
+            'STANDING AND SWEEPING': 'standing and sweeping the floor',
+            'STANDING LOADING/UNLOADING SHELF': 'standing and loading books',
+            'UNKNOWN': 'doing some unknown activity',
+            'STANDING': 'standing'
+        }
+    }
+
     clone() {
         const predictionSet = this.prediction;
         const clonedPredictionSet = predictionSet.map((pr) => {
@@ -145,9 +164,7 @@ class Prediction {
     getTopN(n = 5) {
         const sorted = this.prediction.slice(0);
         sorted.sort((a, b) => b.score - a.score);
-        const topN = new Prediction(sorted.slice(0, n - 1));
-        const copied = Prediction.copy(topN);
-        return copied.prediction;
+        return sorted.slice(0, n);
     }
 
     static fromJSON(jsonData) {
@@ -171,7 +188,6 @@ class Prediction {
     static convertToJSONAnnotations(predictions, id) {
         const jsonObj = predictions.map(prediction => {
             const newJson = prediction.toJSON();
-            newJson.id = id;
             return newJson;
         });
         return jsonObj;

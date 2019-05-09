@@ -36,6 +36,7 @@ class App extends React.Component {
             accelerometerSamplingRate: 50,
             accelerometerDynamicRange: 8,
             predictions: [],
+            annotations: [],
             numOfPastPredictions: 3
         }
     }
@@ -562,7 +563,9 @@ class App extends React.Component {
         }, 10 * 1000);
         let processor = this.state.processors.filter(p => p.selected);
         processor = processor.length > 0 ? processor[0] : undefined;
-        if (processor != undefined) {
+        if (processor != undefined && processor.status == 'running') {
+            // append stop time to the last annotation
+            this.completeAnnotation();
             this.state.apiService.stopProcessor(processor, (p, status) => {
                 console.log(p);
                 if (status == 200) {
@@ -577,16 +580,27 @@ class App extends React.Component {
                         processors: updatedProcessors
                     });
                     this.state.apiService.disconnectProcessor(processor);
-                    message.success('uploading annotations...')
+                    message.success('uploading prediction corrections...')
                     this.state.apiService.uploadPredictions(this.state.predictions, processor.name, (m) => {
                         if (m == 'success') {
+                            message.success('uploaded prediction corrections...')
+                            this.setState({
+                                predictions: []
+                            });
+                        } else {
+                            message.error('failed to upload prediction corrections!')
+                        }
+                    });
+                    message.success('uploading annotations...')
+                    this.state.apiService.uploadAnnotations(this.state.annotations, processor.name, (m) => {
+                        if (m == 'success') {
                             message.success('uploaded annotations...')
+                            this.setState({
+                                annotations: []
+                            });
                         } else {
                             message.error('failed to upload annotations!')
                         }
-                        this.setState({
-                            predictions: []
-                        });
                     });
                 } else {
                     message.error('Failed to stop selected processor');
@@ -605,6 +619,50 @@ class App extends React.Component {
         })
         this.setState({
             predictions: updatedPredictions
+        });
+    }
+
+    annotate(label) {
+        const annotations = this.state.annotations;
+        if (annotations.length == 0) {
+            annotations.push({
+                label_name: label,
+                start_time: new Date().getTime() / 1000.0
+            });
+        } else {
+            const lastAnnotation = annotations[annotations.length - 1];
+            if (lastAnnotation['stop_time'] == undefined) {
+                lastAnnotation['stop_time'] = new Date().getTime() / 1000.0;
+                if (label != lastAnnotation.label_name) {
+                    annotations.push({
+                        label_name: label,
+                        start_time: new Date().getTime() / 1000.0
+                    });
+                }
+            } else {
+                annotations.push({
+                    label_name: label,
+                    start_time: new Date().getTime() / 1000.0
+                });
+            }
+        }
+        const updatedAnnotations = annotations.slice(0);
+        this.setState({
+            annotations: updatedAnnotations
+        });
+    }
+
+    completeAnnotation() {
+        const annotations = this.state.annotations;
+        if (annotations.length > 0) {
+            const lastAnnotation = annotations[annotations.length - 1];
+            if (lastAnnotation['stop_time'] == undefined) {
+                lastAnnotation['stop_time'] = new Date().getTime() / 1000.0;
+            }
+        }
+        const updatedAnnotations = annotations.slice(0);
+        this.setState({
+            annotations: updatedAnnotations
         });
     }
 
@@ -673,7 +731,7 @@ class App extends React.Component {
             title: 'Run and monitor',
             subTitle: 'start experiment session',
             description: 'Use the "Processors" tab to review the settings of different processors and confirm the selected processor. Click "Submit settings and run the processor" to start running the processor and generate predictions. Click "Stop the processor" to stop the running processor. On the left monitor panel, you may see the visualization display that is optimized for experts; on the right monitor panel, you may see the visualization display shown to the subject (novice user).',
-            content: <RunProcessor runProcessor={this.runProcessor.bind(this)} processors={this.state.processors} stopProcessor={this.stopProcessor.bind(this)} isStartingProcessor={this.state.isStartingProcessor} isStoppingProcessor={this.state.isStoppingProcessor} predictions={this.state.predictions} numOfPastPredictions={this.state.numOfPastPredictions} correctLabel={this.correctLabel.bind(this)} addPredictionNote={this.addPredictionNote.bind(this)} changeNumOfPastPredictions={this.changeNumOfPastPredictions.bind(this)} />,
+            content: <RunProcessor runProcessor={this.runProcessor.bind(this)} processors={this.state.processors} stopProcessor={this.stopProcessor.bind(this)} isStartingProcessor={this.state.isStartingProcessor} isStoppingProcessor={this.state.isStoppingProcessor} predictions={this.state.predictions} annotations={this.state.annotations} annotate={this.annotate.bind(this)} numOfPastPredictions={this.state.numOfPastPredictions} correctLabel={this.correctLabel.bind(this)} addPredictionNote={this.addPredictionNote.bind(this)} changeNumOfPastPredictions={this.changeNumOfPastPredictions.bind(this)} />,
             validateNext: () => null,
             validateBack: () => null
         }];
