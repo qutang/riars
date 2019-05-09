@@ -16,7 +16,7 @@ class SubjectList extends React.Component {
             height: 1.80,
             dress: 'Business Casual',
             shoes: 'Sneakers',
-            dominantSide: 'Right'
+            dominant_side: 'Right'
         }
     }
 
@@ -201,7 +201,7 @@ class SubjectList extends React.Component {
                     <div className="create-subject-item">
                         <span>Dominant side</span>
                         <Select className='create-subject-item-control' defaultValue="Right" onChange={(value) => {
-                            this.newSubjSetting.dominantSide = value;
+                            this.newSubjSetting.dominant_side = value;
                         }}>
                             <Option value="Right">
                                 Right
