@@ -12,11 +12,15 @@ class UserPredictionMonitor extends React.Component {
         this.state = {
             isPredicting: false,
             currentTime: 0,
-            voiceOn: false
+            voiceOn: false,
+            voiceFeedbackInterval: 30
         }
+        this.voiceFeedbackTimer = 0;
+        this.sessionStartTime = undefined;
         this.lastNumOfPredictions = 0;
         this.windowStartTime = 0;
         this.calibrationCountDown = 100;
+        this.voiceCountDown = 1000;
         this.predictionTime = 0;
         this.voiceFeedback = new VoiceFeedback();
         this.selectedProcessor = undefined;
@@ -24,6 +28,14 @@ class UserPredictionMonitor extends React.Component {
         this.nowPanelContent = undefined;
         this.labels = [];
         this.isResting = true;
+        this.predictionPanelWidth = 370;
+        this.nowPanelWidth = 500;
+    }
+
+    changeVoiceFeedbackInterval(value) {
+        this.setState({
+            voiceFeedbackInterval: value
+        });
     }
 
     addPredictionNote(index, note) {
@@ -68,15 +80,16 @@ class UserPredictionMonitor extends React.Component {
                 currentTime: new Date().getTime() / 1000.0
             });
         }, 1000);
-        setInterval(() => {
-            if (!this.isResting && this.props.predictions.length > 1) {
-                const lastPrediction = this.props.predictions[this.props.predictions.length - 1];
-                this.voiceFeedback.speakPrediction(lastPrediction, this.onVoiceFeedbackEnd.bind(this));
-                this.setState({
-                    voiceOn: true
-                });
-            }
-        }, 30 * 1000);
+    }
+
+    runVoiceFeedback() {
+        if (!this.isResting && this.props.predictions.length > 1) {
+            const lastPrediction = this.props.predictions[this.props.predictions.length - 1];
+            this.voiceFeedback.speakPrediction(lastPrediction, this.onVoiceFeedbackEnd.bind(this));
+            this.setState({
+                voiceOn: true
+            });
+        }
     }
 
     renderPastPredictions(n) {
@@ -92,7 +105,7 @@ class UserPredictionMonitor extends React.Component {
         const pastPredictions = this.props.predictions.slice(startIndex, stopIndex);
         return pastPredictions.map((prediction, index) => {
             const tags = this._renderPrediction(prediction, true, startIndex + index, this.props.predictions.length - index);
-            return <div key={index} className={'past-prediction'}>
+            return <div key={index} className='past-prediction' style={{ width: this.predictionPanelWidth }}>
                 {tags}
             </div>
         });
@@ -111,6 +124,12 @@ class UserPredictionMonitor extends React.Component {
     }
 
     onInit() {
+        this.voiceFeedbackTimer = 0;
+        this.sessionStartTime = undefined;
+        this.labels = [];
+        this.isResting = true;
+        this.predictionPanelWidth = 370;
+        this.nowPanelWidth = 500;
         this.lastNumOfPredictions = 0;
         this.windowStartTime = 0;
         this.calibrationCountDown = 100;
@@ -141,6 +160,9 @@ class UserPredictionMonitor extends React.Component {
     }
 
     onRun() {
+        if (this.sessionStartTime == undefined) {
+            this.sessionStartTime = this.state.currentTime;
+        }
         let deadline = this.windowStartTime + this.selectedProcessor.windowSize;
         const displaySeconds = Math.ceil(deadline - this.state.currentTime);
         if (displaySeconds == 0) {
@@ -203,20 +225,64 @@ class UserPredictionMonitor extends React.Component {
         }
     }
 
+    getSessionLapseTime() {
+        if (this.sessionStartTime != undefined) {
+            const totalSeconds = this.state.currentTime - this.sessionStartTime;
+            const hour = Math.floor(totalSeconds / 3600);
+            const minute = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = Math.floor((totalSeconds % 3600) % 60);
+            const displayTime = (hour < 10 ? ('0' + hour) : hour) + ":" + (minute < 10 ? ('0' + minute) : minute) + ":" + (seconds < 10 ? ('0' + seconds) : seconds);
+            return displayTime;
+
+        }
+        return 'not started';
+    }
+
+    getVoiceFeedbackCountDown() {
+        if (this.voiceFeedbackTimer == 0 && !this.isResting) {
+            this.voiceFeedbackTimer = this.state.currentTime + this.state.voiceFeedbackInterval;
+            return this.state.voiceFeedbackInterval + ' seconds';
+        } else if (this.voiceFeedbackTimer != 0 && !this.isResting) {
+            this.voiceCountDown = Math.floor(this.voiceFeedbackTimer - this.state.currentTime);
+            if (this.voiceCountDown <= 0) {
+                this.voiceFeedbackTimer += this.state.voiceFeedbackInterval;
+            }
+            return this.voiceCountDown + ' seconds';
+        } else if (this.isResting) {
+            this.voiceFeedbackTimer = 0;
+            return "In break";
+        }
+    }
+
+    componentDidUpdate() {
+        if (this.voiceCountDown <= 0) {
+            this.runVoiceFeedback();
+        }
+    }
+
     render() {
         this.setStage();
         this.handleStage();
         return (
             <div className='user-prediction-monitor-container'>
                 <div className='user-prediction-monitor-control'>
-                    <h4>Choose number of past predictions to show</h4>
-                    <Slider className='num-of-past-prediction' min={0} max={10} defaultValue={3} value={this.props.numOfPastPredictions} onChange={this.props.changeNumOfPastPredictions}></Slider>
+                    <div className='user-prediction-monitor-control-item'>
+                        <h4>Choose number of past predictions to show</h4>
+                        <Slider className='num-of-past-prediction' min={0} max={10} defaultValue={3} value={this.props.numOfPastPredictions} onChange={this.props.changeNumOfPastPredictions}></Slider>
+                    </div>
+                    <div className='user-prediction-monitor-control-item'>
+                        <h4>Voice feedback interval (every {this.state.voiceFeedbackInterval} seconds) </h4>
+                        <Slider className='voice-feedback-interval' min={12} max={120} defaultValue={30} value={this.state.voiceFeedbackInterval} onChange={this.changeVoiceFeedbackInterval.bind(this)}></Slider>
+                    </div>
+                    <div className='user-prediction-monitor-control-item'>
+                        <h3>Lapsed time: {this.getSessionLapseTime()}, Voice feedback count down: {this.getVoiceFeedbackCountDown()}</h3>
+                    </div>
                 </div>
-                <div className='user-prediction-monitor'>
-                    <div className='now-panel'>
+                <div className='user-prediction-monitor' style={{ width: (Math.min(this.props.numOfPastPredictions, this.props.predictions.length - 1) + 1) * 380 + 510 }}>
+                    <div className='now-panel' style={{ width: this.nowPanelWidth }}>
                         {this.nowPanelContent}
                     </div>
-                    <div className='current-prediction'>
+                    <div className='current-prediction' style={{ width: this.predictionPanelWidth }}>
                         {this.renderCurrentPrediction()}
                     </div>
                     {this.renderPastPredictions(this.props.numOfPastPredictions)}

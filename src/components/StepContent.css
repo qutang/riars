@@ -1,12 +1,7 @@
 .steps-content {
-    margin: 10px auto;
+    margin: 0 auto;
     overflow: auto;
     width: 100%;
-}
-
-.step-header {
-    border-bottom: 1px solid #e8e8e8;
-    max-height: 300px;
 }
 
 .step-header-extra {
@@ -17,4 +12,18 @@
 .step-header-extra > *{
     margin-right: 10px;
     
+}
+
+.ant-collapse-content-active {
+    max-height: 150px;
+    overflow: auto;
+}
+
+.ant-collapse > .ant-collapse-item > .ant-collapse-header {
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+.ant-collapse-content > .ant-collapse-content-box {
+    padding-bottom: 2px;
 }
