@@ -228,9 +228,9 @@ class UserPredictionMonitor extends React.Component {
     getSessionLapseTime() {
         if (this.sessionStartTime != undefined) {
             const totalSeconds = this.state.currentTime - this.sessionStartTime;
-            const hour = Math.floor(totalSeconds / 3600);
-            const minute = Math.floor((totalSeconds % 3600) / 60);
-            const seconds = Math.floor((totalSeconds % 3600) % 60);
+            const hour = Math.round(totalSeconds / 3600);
+            const minute = Math.round((totalSeconds % 3600) / 60);
+            const seconds = Math.round((totalSeconds % 3600) % 60);
             const displayTime = (hour < 10 ? ('0' + hour) : hour) + ":" + (minute < 10 ? ('0' + minute) : minute) + ":" + (seconds < 10 ? ('0' + seconds) : seconds);
             return displayTime;
 
@@ -243,7 +243,7 @@ class UserPredictionMonitor extends React.Component {
             this.voiceFeedbackTimer = this.state.currentTime + this.state.voiceFeedbackInterval;
             return this.state.voiceFeedbackInterval + ' seconds';
         } else if (this.voiceFeedbackTimer != 0 && !this.isResting) {
-            this.voiceCountDown = Math.floor(this.voiceFeedbackTimer - this.state.currentTime);
+            this.voiceCountDown = Math.round(this.voiceFeedbackTimer - this.state.currentTime);
             if (this.voiceCountDown <= 0) {
                 this.voiceFeedbackTimer += this.state.voiceFeedbackInterval;
             }
