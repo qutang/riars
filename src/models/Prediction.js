@@ -37,15 +37,15 @@ class Prediction {
             'BRISK WALKING': 'walking briskly',
             'RUNNING': 'running',
             'NORMAL WALKING': 'walking normally',
-            'LYING': 'lying down',
+            'LYING': 'lying',
             'SITTING': 'sitting',
-            'SITTING AND TYPING ON A KEYBOARD': 'sitting and using a computer',
-            'SITTING AND WRITING': 'sitting and writing',
+            'SITTING AND TYPING ON A KEYBOARD': 'using a computer',
+            'SITTING AND WRITING': 'writing',
             'SLOW WALKING': 'walking slowly',
-            'STANDING AND FOLDING TOWELS': 'standing and folding laundries',
-            'STANDING AND SWEEPING': 'standing and sweeping the floor',
-            'STANDING LOADING/UNLOADING SHELF': 'standing and loading books',
-            'UNKNOWN': 'doing some unknown activity',
+            'STANDING AND FOLDING TOWELS': 'folding laundries',
+            'STANDING AND SWEEPING': 'sweeping',
+            'STANDING LOADING/UNLOADING SHELF': 'loading shelf',
+            'UNKNOWN': 'unknown',
             'STANDING': 'standing'
         }
     }

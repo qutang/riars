@@ -5,7 +5,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
     entry: {
-        app: "./src/index.js"
+        app: "./src/index.js",
     },
     module: {
         rules: [
@@ -30,6 +30,7 @@ module.exports = {
         new webpack.HotModuleReplacementPlugin(),
         new CleanWebpackPlugin(),
         new HtmlWebpackPlugin({
+            chunks: ['app'],
             template: path.resolve(__dirname, "public", 'index.html'),
             title: 'Real-time interactive AR system'
         })]

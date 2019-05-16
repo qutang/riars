@@ -64,7 +64,7 @@ class UserPredictionMonitor extends React.Component {
         });
     }
 
-    onVoiceFeedbackEnd(event) {
+    onVoiceFeedbackEnd() {
         this.setState({
             voiceOn: false
         });
@@ -85,7 +85,13 @@ class UserPredictionMonitor extends React.Component {
     runVoiceFeedback() {
         if (!this.isResting && this.props.predictions.length > 1) {
             const lastPrediction = this.props.predictions[this.props.predictions.length - 1];
-            this.voiceFeedback.speakPrediction(lastPrediction, this.onVoiceFeedbackEnd.bind(this));
+            this.voiceFeedback.speakPrediction(lastPrediction).then((success)=> {
+                if(success){
+                    this.onVoiceFeedbackEnd();
+                }
+            }, function(error) {
+                console.error(error);
+            });
             this.setState({
                 voiceOn: true
             });
