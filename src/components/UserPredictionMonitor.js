@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Slider, Spin, Icon, Statistic } from 'antd';
 import PredictionTagGroup from './PredictionTagGroup';
 import AnnotationPanel from './AnnotationPanel';
+import AnnotationTag from './AnnotationTag';
 import VoiceFeedback from '../models/VoiceFeedback';
 import './UserPredictionMonitor.css';
 
@@ -13,8 +14,12 @@ class UserPredictionMonitor extends React.Component {
             isPredicting: false,
             currentTime: 0,
             voiceOn: false,
-            voiceFeedbackInterval: 30
+            voiceFeedbackInterval: 30,
+            beepOn: false,
+            variationIsOn: false
         }
+        this.correctPredictionCount = 0;
+        this.wrongPredictionCount = 0;
         this.voiceFeedbackTimer = 0;
         this.sessionStartTime = undefined;
         this.lastNumOfPredictions = 0;
@@ -64,6 +69,38 @@ class UserPredictionMonitor extends React.Component {
         this.setState({
             isPredicting: false
         });
+        const lastAnnotation = this.props.annotations[this.props.annotations.length - 1];
+        const lastPrediction = this.props.predictions[this.props.predictions.length - 1];
+        const systemPrediction = lastPrediction.getTopN(1)[0];
+
+        // decide when to auto beep to remind switching
+        if(lastAnnotation.label_name != 'BREAK' && lastAnnotation.label_name != 'SYNC' && this.state.variationIsOn) {
+            console.log('annotation label:' + lastAnnotation.label_name);
+            console.log('system prediction label:' + systemPrediction.label);
+            if(lastAnnotation.label_name === systemPrediction.label) {
+                this.correctPredictionCount += 1;
+            }else {
+                this.wrongPredictionCount += 1;
+                this.wrongPredictionCount += this.correctPredictionCount; // previous correct ones are now counted as uncertain
+                this.correctPredictionCount = 0;
+            }
+            if(this.correctPredictionCount >= 3 || this.wrongPredictionCount >= 8 || this.correctPredictionCount + this.wrongPredictionCount >= 8) {
+                this.correctPredictionCount = 0;
+                this.wrongPredictionCount = 0;
+                // beep to switch when we detect three consecutive success predictions or eight consecutive wrong predictions
+                this.setState({
+                    beepOn: true
+                })
+                this.voiceFeedback.playBeep((function onBeepEnd() {
+                    this.setState({
+                        beepOn: false
+                    });
+                }).bind(this));
+            }
+        } else {
+            this.correctPredictionCount = 0;
+            this.wrongPredictionCount = 0;
+        }
     }
 
     onVoiceFeedbackEnd() {
@@ -122,7 +159,6 @@ class UserPredictionMonitor extends React.Component {
     _renderPrediction(prediction, past = true, index, pastIndex) {
         const displayTime = Math.round((this.state.currentTime - prediction.stopTime) * 10.0) / 10.0;
         const displayTimeStart = Math.round((this.state.currentTime - prediction.startTime) * 10.0) / 10.0;
-        let windowType;
         return (
             <div>
                 <h3>{displayTimeStart + '-' + displayTime + ' seconds ago'}</h3>
@@ -142,6 +178,8 @@ class UserPredictionMonitor extends React.Component {
         this.windowStartTime = 0;
         this.calibrationCountDown = 100;
         this.predictionTime = 0;
+        this.correctPredictionCount = 0;
+        this.wrongPredictionCount = 0;
         // set now panel
         this.nowPanelContent = <h3><Spin /> Calibrating timestamps...</h3>;
         // set init annotation
@@ -166,8 +204,18 @@ class UserPredictionMonitor extends React.Component {
                 <>
                     <h3>Data collection will start in {this.calibrationCountDown} seconds</h3>
                     <AnnotationPanel labels={this.labels} annotations={this.props.annotations} annotate={this.props.annotate} />
+                    <AnnotationTag label={'Variation'} isOn={this.state.variationIsOn} annotate={this.switchVariationStatus.bind(this)} />
                 </>;
         }
+    }
+
+    switchVariationStatus() {
+        console.log('switching variation status');
+        this.correctPredictionCount = 0;
+        this.wrongPredictionCount = 0;
+        this.setState({
+            variationIsOn: !this.state.variationIsOn
+        });
     }
 
     onRun() {
@@ -185,14 +233,16 @@ class UserPredictionMonitor extends React.Component {
         }
         // set now panel
         this.nowPanelContent = <>
-            <h3>Data collection for current window finishes in {displaySeconds} seconds {this.state.voiceOn && <Icon type="sound" />}</h3>
+            <h3>Data collection for current window finishes in {displaySeconds} seconds {this.state.voiceOn && <Icon type="sound" />} {this.state.beepOn && <Icon type="alert" />}</h3>
+            <h4>Correct predictions: {this.correctPredictionCount}, wrong predictions: {this.wrongPredictionCount}</h4>
             <AnnotationPanel labels={this.labels} annotations={this.props.annotations} annotate={this.props.annotate} />
+            <AnnotationTag label={'Variation'} isOn={this.state.variationIsOn} annotate={this.switchVariationStatus.bind(this)} />
         </>;
 
-        // when break is on
+        // when break or sync is on
         if (this.props.annotations.length > 0) {
             const lastAnnotation = this.props.annotations[this.props.annotations.length - 1];
-            if (lastAnnotation.label_name == 'BREAK' && lastAnnotation['stop_time'] == undefined) {
+            if ((lastAnnotation.label_name == 'BREAK' || lastAnnotation.label_name == 'SYNC') && lastAnnotation['stop_time'] == undefined) {
                 this.isResting = true;
             } else {
                 this.isResting = false;
@@ -279,11 +329,11 @@ class UserPredictionMonitor extends React.Component {
                 <div className='user-prediction-monitor-control'>
                     <div className='user-prediction-monitor-control-item'>
                         <h4>Choose number of past predictions to show</h4>
-                        <Slider className='num-of-past-prediction' min={0} max={10} defaultValue={3} value={this.props.numOfPastPredictions} onChange={this.props.changeNumOfPastPredictions}></Slider>
+                        <Slider className='num-of-past-prediction' min={0} max={10} defaultValue={1} value={this.props.numOfPastPredictions} onChange={this.props.changeNumOfPastPredictions}></Slider>
                     </div>
                     <div className='user-prediction-monitor-control-item'>
                         <h4>Voice feedback interval (every {this.state.voiceFeedbackInterval} seconds) </h4>
-                        <Slider className='voice-feedback-interval' min={12} max={120} defaultValue={30} value={this.state.voiceFeedbackInterval} onChange={this.changeVoiceFeedbackInterval.bind(this)}></Slider>
+                        <Slider className='voice-feedback-interval' min={12} max={120} defaultValue={15} value={this.state.voiceFeedbackInterval} onChange={this.changeVoiceFeedbackInterval.bind(this)}></Slider>
                     </div>
                     <div className='user-prediction-monitor-control-item'>
                         <h3>Lapsed time: {this.getSessionLapseTime()}, Voice feedback count down: {this.getVoiceFeedbackCountDown()}, Inference delay: {Math.round(this.inferenceDelay * 10) / 10.0}</h3>

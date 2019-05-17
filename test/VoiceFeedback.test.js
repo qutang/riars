@@ -4,7 +4,7 @@ const assert = require('assert');
 describe('voice-feedback', () => {
     it(
         "should play voice after clicking the run button on the right.", function(done) {
-            this.timeout(5000);
+            this.timeout(8000);
             const voiceFeedback = new VoiceFeedback();
             setTimeout(function() {
                 // wait a second then play, as the browser needs to first load voices 
@@ -31,6 +31,18 @@ describe('voice-feedback', () => {
                     done();
                 });
             }, 1000);
+        }
+    )
+});
+
+describe('beep-feedback', () => {
+    it(
+        "should play beep after clicking the run button on the right.", function(done) {
+            this.timeout(5000);
+            const voiceFeedback = new VoiceFeedback();
+            voiceFeedback.playBeep(function onBeepEnd() {
+                done(); 
+            });
         }
     )
 });

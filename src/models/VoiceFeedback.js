@@ -1,4 +1,6 @@
 import Prediction from './Prediction';
+import {Howl, Howler} from 'howler';
+import beepSoundFile from '../../assets/beep.mp3';
 
 class VoiceFeedback {
     constructor() {
@@ -8,6 +10,7 @@ class VoiceFeedback {
         this._voiceVolumes = [];
         this._elapsedTime = 0;
         this._synth.onvoiceschanged = this.setVoice.bind(this);
+        this._beepHowler = undefined;
     }
 
     setVoice() {
@@ -53,6 +56,20 @@ class VoiceFeedback {
                 vf._speakTexts(predictionSet);
             }
         });
+    }
+
+    playBeep(onBeepEnd) {
+        const beepHowler = new Howl({
+            src: beepSoundFile
+        });
+        beepHowler.on('end', onBeepEnd);
+        if(beepHowler.state() == 'loaded'){
+            beepHowler.play();
+        }else{
+            beepHowler.once('load', function playBeepOnLoad(){
+                beepHowler.play();
+            });
+        }
     }
 
     speakPrediction(prediction) {
