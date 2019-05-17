@@ -30,6 +30,7 @@ class UserPredictionMonitor extends React.Component {
         this.isResting = true;
         this.predictionPanelWidth = 370;
         this.nowPanelWidth = 500;
+        this.inferenceDelay = 0;
     }
 
     changeVoiceFeedbackInterval(value) {
@@ -58,6 +59,7 @@ class UserPredictionMonitor extends React.Component {
     }
 
     onFinishPrediction() {
+        this.inferenceDelay = this.state.currentTime - this.props.predictions[this.props.predictions.length - 1].stopTime;
         this.lastNumOfPredictions = this.props.predictions.length;
         this.setState({
             isPredicting: false
@@ -149,8 +151,11 @@ class UserPredictionMonitor extends React.Component {
     }
 
     onCalibrate() {
-        this.windowStartTime = this.props.predictions[0].startTime + 2 * this.selectedProcessor.windowSize;
-        const deadline = this.props.predictions[0].stopTime + this.selectedProcessor.windowSize;
+        if (this.inferenceDelay == 0){
+            this.inferenceDelay = new Date().getTime() / 1000.0 - this.props.predictions[0].stopTime;
+        }
+        this.windowStartTime = this.props.predictions[0].stopTime + this.selectedProcessor.windowSize;
+        const deadline = this.windowStartTime;
         this.calibrationCountDown = Math.ceil(deadline - this.state.currentTime);
         this.labels = this.props.predictions[0].prediction.map(p => p.label);
         this.labels.push('SYNC');
@@ -234,8 +239,8 @@ class UserPredictionMonitor extends React.Component {
     getSessionLapseTime() {
         if (this.sessionStartTime != undefined) {
             const totalSeconds = this.state.currentTime - this.sessionStartTime;
-            const hour = Math.round(totalSeconds / 3600);
-            const minute = Math.round((totalSeconds % 3600) / 60);
+            const hour = Math.floor(totalSeconds / 3600);
+            const minute = Math.floor((totalSeconds % 3600) / 60);
             const seconds = Math.round((totalSeconds % 3600) % 60);
             const displayTime = (hour < 10 ? ('0' + hour) : hour) + ":" + (minute < 10 ? ('0' + minute) : minute) + ":" + (seconds < 10 ? ('0' + seconds) : seconds);
             return displayTime;
@@ -281,7 +286,7 @@ class UserPredictionMonitor extends React.Component {
                         <Slider className='voice-feedback-interval' min={12} max={120} defaultValue={30} value={this.state.voiceFeedbackInterval} onChange={this.changeVoiceFeedbackInterval.bind(this)}></Slider>
                     </div>
                     <div className='user-prediction-monitor-control-item'>
-                        <h3>Lapsed time: {this.getSessionLapseTime()}, Voice feedback count down: {this.getVoiceFeedbackCountDown()}</h3>
+                        <h3>Lapsed time: {this.getSessionLapseTime()}, Voice feedback count down: {this.getVoiceFeedbackCountDown()}, Inference delay: {Math.round(this.inferenceDelay * 10) / 10.0}</h3>
                     </div>
                 </div>
                 <div className='user-prediction-monitor' style={{ width: (Math.min(this.props.numOfPastPredictions, this.props.predictions.length - 1) + 1) * 380 + 510 }}>
