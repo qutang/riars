@@ -14,9 +14,12 @@ class SubjectList extends React.Component {
             gender: 'Male',
             weight: 60,
             height: 1.80,
+            blood_pressure: "Unavailable",
+            heart_rate: 0,
             dress: 'Business Casual',
             shoes: 'Sneakers',
-            dominant_side: 'Right'
+            dominant_hand: 'Right', 
+            dominant_foot: 'Right'
         }
     }
 
@@ -150,6 +153,30 @@ class SubjectList extends React.Component {
                     </div>
 
                     <div className="create-subject-item">
+                        <span>Rest blood pressure</span>
+                        <Input className='create-subject-item-control'
+                            onChange={(value) => {
+                                this.newSubjSetting.blood_pressure = value;
+                            }}
+                            placeholder="Enter Blood pressure"
+                        />
+                    </div>
+
+                    <div className="create-subject-item">
+                        <span>Rest heart rate</span>
+                        <InputNumber className='create-subject-item-control'
+                            onChange={(value) => {
+                                this.newSubjSetting.heart_rate = value;
+                            }}
+                            placeholder="Enter Heart rate"
+                            min={20.0}
+                            max={250.0}
+                            step={1}
+                            defaultValue={70}
+                        />
+                    </div>
+
+                    <div className="create-subject-item">
                         <span>Dress</span>
                         <Select className='create-subject-item-control' defaultValue="Business casual" onChange={(value) => {
                             this.newSubjSetting.dress = value;
@@ -199,9 +226,26 @@ class SubjectList extends React.Component {
                     </div>
 
                     <div className="create-subject-item">
-                        <span>Dominant side</span>
+                        <span>Dominant hand</span>
                         <Select className='create-subject-item-control' defaultValue="Right" onChange={(value) => {
-                            this.newSubjSetting.dominant_side = value;
+                            this.newSubjSetting.dominant_hand = value;
+                        }}>
+                            <Option value="Right">
+                                Right
+                            </Option>
+                            <Option value="Left">
+                                Left
+                            </Option>
+                            <Option value="Unknown">
+                                Unknown
+                            </Option>
+                        </Select>
+                    </div>
+
+                    <div className="create-subject-item">
+                        <span>Dominant foot</span>
+                        <Select className='create-subject-item-control' defaultValue="Right" onChange={(value) => {
+                            this.newSubjSetting.dominant_foot = value;
                         }}>
                             <Option value="Right">
                                 Right

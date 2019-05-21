@@ -7,9 +7,12 @@ class Subject {
         this._gender = undefined;
         this._weight = undefined;
         this._height = undefined;
+        this._blood_pressure = undefined;
+        this._heart_rate = undefined;
         this._dress = undefined;
         this._shoes = undefined;
-        this._dominantSide = undefined;
+        this._dominantHand = undefined;
+        this._dominantFoot = undefined;
         this._selected = false;
     }
 
@@ -59,6 +62,22 @@ class Subject {
         this._height = value
     }
 
+    get blood_pressure() {
+        return this._blood_pressure
+    }
+
+    set blood_pressure(value) {
+        this._blood_pressure = value
+    }
+
+    get heart_rate() {
+        return this._heart_rate
+    }
+
+    set heart_rate(value) {
+        this._heart_rate = value
+    }
+
     get dress() {
         return this._dress
     }
@@ -79,12 +98,20 @@ class Subject {
         this._shoes = value
     }
 
-    get dominantSide() {
-        return this._dominantSide
+    get dominantHand() {
+        return this._dominantHand
     }
 
-    set dominantSide(value) {
-        this._dominantSide = value
+    set dominantHand(value) {
+        this._dominantHand = value
+    }
+
+    get dominantFoot() {
+        return this._dominantFoot
+    }
+
+    set dominantFoot(value) {
+        this._dominantFoot = value
     }
 
     set selected(value) {
@@ -98,15 +125,18 @@ class Subject {
         subject.gender = jsonData['gender'];
         subject.weight = jsonData['weight'];
         subject.height = jsonData['height'];
+        subject.blood_pressure = jsonData['blood_pressure'];
+        subject.heart_rate = jsonData['heart_rate'];
         subject.dress = jsonData['dress'];
         subject.shoes = jsonData['shoes'];
-        subject.dominantSide = jsonData['dominant_side'];
+        subject.dominantHand = jsonData['dominant_hand'];
+        subject.dominantFoot = jsonData['dominant_foot'];
         return subject;
     }
 
     toJSON() {
-        const { id, age, gender, weight, height, dress, shoes, dominantSide, selected } = this;
-        return { id, age, gender, selected, weight, height, dress, shoes, dominant_side: dominantSide };
+        const { id, age, gender, weight, height, blood_pressure, heart_rate, dress, shoes, dominantHand, dominantFoot, selected } = this;
+        return { id, age, gender, selected, weight, height, blood_pressure, heart_rate, dress, shoes, dominant_hand: dominantHand, dominant_foot: dominantFoot };
     }
 }
 
