@@ -37,7 +37,7 @@ class App extends React.Component {
             accelerometerDynamicRange: 8,
             predictions: [],
             annotations: [],
-            numOfPastPredictions: 3
+            numOfPastPredictions: 1
         }
     }
 

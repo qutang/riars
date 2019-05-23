@@ -5,6 +5,7 @@ import AnnotationPanel from './AnnotationPanel';
 import AnnotationTag from './AnnotationTag';
 import VoiceFeedback from '../models/VoiceFeedback';
 import './UserPredictionMonitor.css';
+import { get } from 'http';
 
 
 class UserPredictionMonitor extends React.Component {
@@ -14,7 +15,7 @@ class UserPredictionMonitor extends React.Component {
             isPredicting: false,
             currentTime: 0,
             voiceOn: false,
-            voiceFeedbackInterval: 30,
+            voiceFeedbackInterval: 13,
             beepOn: false,
             variationIsOn: false
         }
@@ -36,6 +37,7 @@ class UserPredictionMonitor extends React.Component {
         this.predictionPanelWidth = 370;
         this.nowPanelWidth = 500;
         this.inferenceDelay = 0;
+        this.currentAnnotationLapsedTime = 0;
     }
 
     changeVoiceFeedbackInterval(value) {
@@ -84,7 +86,7 @@ class UserPredictionMonitor extends React.Component {
                 this.wrongPredictionCount += this.correctPredictionCount; // previous correct ones are now counted as uncertain
                 this.correctPredictionCount = 0;
             }
-            if(this.correctPredictionCount >= 3 || this.wrongPredictionCount >= 8 || this.correctPredictionCount + this.wrongPredictionCount >= 8) {
+            if(this.correctPredictionCount >= 2 || this.wrongPredictionCount >= 5 || this.correctPredictionCount + this.wrongPredictionCount >= 5) {
                 this.correctPredictionCount = 0;
                 this.wrongPredictionCount = 0;
                 // beep to switch when we detect three consecutive success predictions or eight consecutive wrong predictions
@@ -180,6 +182,7 @@ class UserPredictionMonitor extends React.Component {
         this.predictionTime = 0;
         this.correctPredictionCount = 0;
         this.wrongPredictionCount = 0;
+        this.currentAnnotationLapsedTime = 0;
         // set now panel
         this.nowPanelContent = <h3><Spin /> Calibrating timestamps...</h3>;
         // set init annotation
@@ -231,10 +234,13 @@ class UserPredictionMonitor extends React.Component {
         if (this.props.predictions.length > this.lastNumOfPredictions) {
             this.onFinishPrediction();
         }
+
+        
         // set now panel
         this.nowPanelContent = <>
             <h3>Data collection for current window finishes in {displaySeconds} seconds {this.state.voiceOn && <Icon type="sound" />} {this.state.beepOn && <Icon type="alert" />}</h3>
             <h4>Correct predictions: {this.correctPredictionCount}, wrong predictions: {this.wrongPredictionCount}</h4>
+            <h4>Current annotation: {this.getCurrentAnnotationLapsedTime()}</h4>
             <AnnotationPanel labels={this.labels} annotations={this.props.annotations} annotate={this.props.annotate} />
             <AnnotationTag label={'Variation'} isOn={this.state.variationIsOn} annotate={this.switchVariationStatus.bind(this)} />
         </>;
@@ -289,14 +295,32 @@ class UserPredictionMonitor extends React.Component {
     getSessionLapseTime() {
         if (this.sessionStartTime != undefined) {
             const totalSeconds = this.state.currentTime - this.sessionStartTime;
-            const hour = Math.floor(totalSeconds / 3600);
-            const minute = Math.floor((totalSeconds % 3600) / 60);
-            const seconds = Math.round((totalSeconds % 3600) % 60);
-            const displayTime = (hour < 10 ? ('0' + hour) : hour) + ":" + (minute < 10 ? ('0' + minute) : minute) + ":" + (seconds < 10 ? ('0' + seconds) : seconds);
-            return displayTime;
+            return this.formatLapseTime(totalSeconds);
 
         }
         return 'not started';
+    }
+
+    getCurrentAnnotationLapsedTime() {
+        // update annotation lapsed time
+        this.currentAnnotationLapsedTime = this.state.currentTime - this.props.annotations[this.props.annotations.length - 1].start_time
+        return this.formatLapseTime(this.currentAnnotationLapsedTime);
+    }
+
+    formatLapseTime(totalSeconds) {
+        const hour = Math.floor(totalSeconds / 3600);
+        const minute = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = Math.round((totalSeconds % 3600) % 60);
+        const displayTime = (hour < 10 ? ('0' + hour) : hour) + ":" + (minute < 10 ? ('0' + minute) : minute) + ":" + (seconds < 10 ? ('0' + seconds) : seconds);
+        return displayTime;
+    }
+
+    getCurrentProcessor() {
+        return this.props.processors.filter(p=> p.selected)[0];
+    }
+
+    getCurrentWindowSize() {
+        return this.getCurrentProcessor().windowSize;
     }
 
     getVoiceFeedbackCountDown() {
@@ -333,7 +357,7 @@ class UserPredictionMonitor extends React.Component {
                     </div>
                     <div className='user-prediction-monitor-control-item'>
                         <h4>Voice feedback interval (every {this.state.voiceFeedbackInterval} seconds) </h4>
-                        <Slider className='voice-feedback-interval' min={12} max={120} defaultValue={15} value={this.state.voiceFeedbackInterval} onChange={this.changeVoiceFeedbackInterval.bind(this)}></Slider>
+                        <Slider className='voice-feedback-interval' min={Math.ceil(this.getCurrentWindowSize())} max={120} defaultValue={15} value={this.state.voiceFeedbackInterval} onChange={this.changeVoiceFeedbackInterval.bind(this)}></Slider>
                     </div>
                     <div className='user-prediction-monitor-control-item'>
                         <h3>Lapsed time: {this.getSessionLapseTime()}, Voice feedback count down: {this.getVoiceFeedbackCountDown()}, Inference delay: {Math.round(this.inferenceDelay * 10) / 10.0}</h3>
