@@ -22,12 +22,22 @@ class AnnotationPanel extends React.Component {
                     labels.map((label) => {
                         let isOn = false;
                         if (annotations.length > 0) {
-                            const lastAnnotation = annotations[annotations.length - 1];
-                            if (lastAnnotation['stop_time'] == undefined && label == lastAnnotation.label_name) {
-                                isOn = true;
+                            if (label.isMutualExclusive) {
+                                const meAnnotations = annotations.filter(({ is_mutual_exclusive, ...rest }) => is_mutual_exclusive);
+                                const lastMeAnnotation = meAnnotations.length > 0 ? meAnnotations[meAnnotations.length - 1] : undefined;
+                                if (lastMeAnnotation != undefined && lastMeAnnotation['stop_time'] == undefined && label.name == lastMeAnnotation.label_name) {
+                                    isOn = true;
+                                }
+                            }
+                            else {
+                                const notMeSameAnnotations = annotations.filter(({ is_mutual_exclusive, label_name, ...rest }) => !is_mutual_exclusive && label_name === label.name);
+                                const lastNotMeSameAnnotation = notMeSameAnnotations.length > 0 ? notMeSameAnnotations[notMeSameAnnotations.length - 1] : undefined;
+                                if (lastNotMeSameAnnotation != undefined && lastNotMeSameAnnotation['stop_time'] == undefined) {
+                                    isOn = true;
+                                }
                             }
                         }
-                        return <AnnotationTag key={label} label={label} annotate={this.annotate.bind(this)} isOn={isOn} />
+                        return <AnnotationTag key={label.name} label={label} annotate={this.annotate.bind(this)} isOn={isOn} />
                     })
                 }
             </div>

@@ -76,17 +76,17 @@ class UserPredictionMonitor extends React.Component {
         const systemPrediction = lastPrediction.getTopN(1)[0];
 
         // decide when to auto beep to remind switching
-        if(lastAnnotation.label_name != 'BREAK' && lastAnnotation.label_name != 'SYNC' && this.state.variationIsOn) {
+        if (lastAnnotation.label_name != 'BREAK' && lastAnnotation.label_name != 'SYNC' && this.state.variationIsOn) {
             console.log('annotation label:' + lastAnnotation.label_name);
             console.log('system prediction label:' + systemPrediction.label);
-            if(lastAnnotation.label_name === systemPrediction.label) {
+            if (lastAnnotation.label_name === systemPrediction.label) {
                 this.correctPredictionCount += 1;
-            }else {
+            } else {
                 this.wrongPredictionCount += 1;
                 this.wrongPredictionCount += this.correctPredictionCount; // previous correct ones are now counted as uncertain
                 this.correctPredictionCount = 0;
             }
-            if(this.correctPredictionCount >= 2 || this.wrongPredictionCount >= 5 || this.correctPredictionCount + this.wrongPredictionCount >= 5) {
+            if (this.correctPredictionCount >= 2 || this.wrongPredictionCount >= 5 || this.correctPredictionCount + this.wrongPredictionCount >= 5) {
                 this.correctPredictionCount = 0;
                 this.wrongPredictionCount = 0;
                 // beep to switch when we detect three consecutive success predictions or eight consecutive wrong predictions
@@ -126,11 +126,11 @@ class UserPredictionMonitor extends React.Component {
     runVoiceFeedback() {
         if (!this.isResting && this.props.predictions.length > 1) {
             const lastPrediction = this.props.predictions[this.props.predictions.length - 1];
-            this.voiceFeedback.speakPrediction(lastPrediction).then((success)=> {
-                if(success){
+            this.voiceFeedback.speakPrediction(lastPrediction).then((success) => {
+                if (success) {
                     this.onVoiceFeedbackEnd();
                 }
-            }, function(error) {
+            }, function (error) {
                 console.error(error);
             });
             this.setState({
@@ -187,27 +187,28 @@ class UserPredictionMonitor extends React.Component {
         this.nowPanelContent = <h3><Spin /> Calibrating timestamps...</h3>;
         // set init annotation
         if (this.props.annotations.length == 0) {
-            this.props.annotate('BREAK');
+            this.props.annotate({ name: 'BREAK', isMutualExclusive: true });
         }
     }
 
     onCalibrate() {
-        if (this.inferenceDelay == 0){
+        if (this.inferenceDelay == 0) {
             this.inferenceDelay = new Date().getTime() / 1000.0 - this.props.predictions[0].stopTime;
         }
         this.windowStartTime = this.props.predictions[0].stopTime + this.selectedProcessor.windowSize;
         const deadline = this.windowStartTime;
         this.calibrationCountDown = Math.ceil(deadline - this.state.currentTime);
-        this.labels = this.props.predictions[0].prediction.map(p => p.label);
-        this.labels.push('SYNC');
-        this.labels.push('BREAK');
+        this.labels = this.props.predictions[0].prediction.map(p => ({ name: p.label, isMutualExclusive: true }));
+        this.labels.push({ name: 'SYNC', isMutualExclusive: true });
+        this.labels.push({ name: 'BREAK', isMutualExclusive: true });
+        this.labels.push({ name: 'OUT_SCOPE', isMutualExclusive: false })
         // set now panel
         if (this.calibrationCountDown > 0) {
             this.nowPanelContent =
                 <>
                     <h3>Data collection will start in {this.calibrationCountDown} seconds</h3>
                     <AnnotationPanel labels={this.labels} annotations={this.props.annotations} annotate={this.props.annotate} />
-                    <AnnotationTag label={'Variation'} isOn={this.state.variationIsOn} annotate={this.switchVariationStatus.bind(this)} />
+                    <AnnotationTag label={{ name: 'Variation', isMutualExclusive: true }} isOn={this.state.variationIsOn} annotate={this.switchVariationStatus.bind(this)} />
                 </>;
         }
     }
@@ -235,14 +236,14 @@ class UserPredictionMonitor extends React.Component {
             this.onFinishPrediction();
         }
 
-        
+
         // set now panel
         this.nowPanelContent = <>
             <h3>Data collection for current window finishes in {displaySeconds} seconds {this.state.voiceOn && <Icon type="sound" />} {this.state.beepOn && <Icon type="alert" />}</h3>
             <h4>Correct predictions: {this.correctPredictionCount}, wrong predictions: {this.wrongPredictionCount}</h4>
             <h4>Current annotation: {this.getCurrentAnnotationLapsedTime()}</h4>
             <AnnotationPanel labels={this.labels} annotations={this.props.annotations} annotate={this.props.annotate} />
-            <AnnotationTag label={'Variation'} isOn={this.state.variationIsOn} annotate={this.switchVariationStatus.bind(this)} />
+            <AnnotationTag label={{ name: 'Variation', isMutualExclusive: true }} isOn={this.state.variationIsOn} annotate={this.switchVariationStatus.bind(this)} />
         </>;
 
         // when break or sync is on
@@ -302,8 +303,9 @@ class UserPredictionMonitor extends React.Component {
     }
 
     getCurrentAnnotationLapsedTime() {
-        // update annotation lapsed time
-        this.currentAnnotationLapsedTime = this.state.currentTime - this.props.annotations[this.props.annotations.length - 1].start_time
+        // update annotation lapsed time (only mutual exclusive annotations)
+        var meAnnotations = this.props.annotations.filter(({ is_mutual_exclusive, ...rest }) => is_mutual_exclusive);
+        this.currentAnnotationLapsedTime = this.state.currentTime - meAnnotations[meAnnotations.length - 1].start_time
         return this.formatLapseTime(this.currentAnnotationLapsedTime);
     }
 
@@ -316,7 +318,7 @@ class UserPredictionMonitor extends React.Component {
     }
 
     getCurrentProcessor() {
-        return this.props.processors.filter(p=> p.selected)[0];
+        return this.props.processors.filter(p => p.selected)[0];
     }
 
     getCurrentWindowSize() {

@@ -626,24 +626,59 @@ class App extends React.Component {
         const annotations = this.state.annotations;
         if (annotations.length == 0) {
             annotations.push({
-                label_name: label,
-                start_time: new Date().getTime() / 1000.0
+                label_name: label.name,
+                start_time: new Date().getTime() / 1000.0,
+                is_mutual_exclusive: label.isMutualExclusive
             });
         } else {
-            const lastAnnotation = annotations[annotations.length - 1];
-            if (lastAnnotation['stop_time'] == undefined) {
-                lastAnnotation['stop_time'] = new Date().getTime() / 1000.0;
-                if (label != lastAnnotation.label_name) {
+            if (label.isMutualExclusive) {
+                var mutualExclusiveAnnotations = annotations.filter(({ is_mutual_exclusive, ...rest }) => is_mutual_exclusive);
+                if (mutualExclusiveAnnotations.length == 0) {
                     annotations.push({
-                        label_name: label,
-                        start_time: new Date().getTime() / 1000.0
+                        label_name: label.name,
+                        start_time: new Date().getTime() / 1000.0,
+                        is_mutual_exclusive: label.isMutualExclusive
                     });
+                } else {
+                    const lastMeAnnotation = mutualExclusiveAnnotations[mutualExclusiveAnnotations.length - 1];
+                    if (lastMeAnnotation['stop_time'] == undefined) {
+                        lastMeAnnotation['stop_time'] = new Date().getTime() / 1000.0;
+                        if (label.name !== lastMeAnnotation.label_name) {
+                            annotations.push({
+                                label_name: label.name,
+                                start_time: new Date().getTime() / 1000.0,
+                                is_mutual_exclusive: label.isMutualExclusive
+                            });
+                        }
+                    } else {
+                        annotations.push({
+                            label_name: label.name,
+                            start_time: new Date().getTime() / 1000.0,
+                            is_mutual_exclusive: label.isMutualExclusive
+                        });
+                    }
                 }
-            } else {
-                annotations.push({
-                    label_name: label,
-                    start_time: new Date().getTime() / 1000.0
-                });
+            }
+            else {
+                var notMeSameAnnotations = annotations.filter(({ is_mutual_exclusive, label_name, ...rest }) => !is_mutual_exclusive && label_name === label.name);
+                if (notMeSameAnnotations.length == 0) {
+                    annotations.push({
+                        label_name: label.name,
+                        start_time: new Date().getTime() / 1000.0,
+                        is_mutual_exclusive: label.isMutualExclusive
+                    });
+                } else {
+                    var lastNotMeSameAnnotation = notMeSameAnnotations[notMeSameAnnotations.length - 1];
+                    if (lastNotMeSameAnnotation['stop_time'] == undefined) {
+                        lastNotMeSameAnnotation['stop_time'] = new Date().getTime() / 1000.0;
+                    } else {
+                        annotations.push({
+                            label_name: label.name,
+                            start_time: new Date().getTime() / 1000.0,
+                            is_mutual_exclusive: label.isMutualExclusive
+                        });
+                    }
+                }
             }
         }
         const updatedAnnotations = annotations.slice(0);
