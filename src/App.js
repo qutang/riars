@@ -689,11 +689,22 @@ class App extends React.Component {
 
     completeAnnotation() {
         const annotations = this.state.annotations;
+        const currentTs = new Date().getTime() / 1000.0;
         if (annotations.length > 0) {
-            const lastAnnotation = annotations[annotations.length - 1];
-            if (lastAnnotation['stop_time'] == undefined) {
-                lastAnnotation['stop_time'] = new Date().getTime() / 1000.0;
+            var meAnnotations = annotations.filter(({ is_mutual_exclusive, ...rest }) => is_mutual_exclusive);
+            var notMeAnnotations = annotations.filter(({ is_mutual_exclusive, ...rest }) => !is_mutual_exclusive);
+            if (meAnnotations.length > 0) {
+                const lastMeAnnotation = meAnnotations[meAnnotations.length - 1];
+                if (lastMeAnnotation['stop_time'] == undefined) {
+                    lastMeAnnotation['stop_time'] = currentTs;
+                }
             }
+            notMeAnnotations = notMeAnnotations.map(annotation => {
+                if (annotation['stop_time'] == undefined) {
+                    annotation['stop_time'] = currentTs;
+                }
+                return annotation;
+            });
         }
         const updatedAnnotations = annotations.slice(0);
         this.setState({
