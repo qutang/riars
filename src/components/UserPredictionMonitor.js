@@ -3,6 +3,7 @@ import { Slider, Spin, Icon, Statistic } from 'antd';
 import PredictionTagGroup from './PredictionTagGroup';
 import AnnotationPanel from './AnnotationPanel';
 import AnnotationTag from './AnnotationTag';
+import Annotation from '../models/Annotation';
 import VoiceFeedback from '../models/VoiceFeedback';
 import './UserPredictionMonitor.css';
 import { get } from 'http';
@@ -71,15 +72,16 @@ class UserPredictionMonitor extends React.Component {
         this.setState({
             isPredicting: false
         });
-        const lastAnnotation = this.props.annotations[this.props.annotations.length - 1];
-        const lastPrediction = this.props.predictions[this.props.predictions.length - 1];
+        let meAnnotations = Annotation.getMeAnnotations(this.props.annotations);
+        let lastMeAnnotation = Annotation.getLastAnnotation(meAnnotations);
+        let lastPrediction = this.props.predictions[this.props.predictions.length - 1];
         const systemPrediction = lastPrediction.getTopN(1)[0];
 
         // decide when to auto beep to remind switching
-        if (lastAnnotation.label_name != 'BREAK' && lastAnnotation.label_name != 'SYNC' && this.state.variationIsOn) {
-            console.log('annotation label:' + lastAnnotation.label_name);
+        if (lastMeAnnotation != undefined && lastMeAnnotation.label_name != 'BREAK' && lastMeAnnotation.label_name != 'SYNC' && this.state.variationIsOn) {
+            console.log('annotation label:' + lastMeAnnotation.label_name);
             console.log('system prediction label:' + systemPrediction.label);
-            if (lastAnnotation.label_name === systemPrediction.label) {
+            if (lastMeAnnotation.label_name === systemPrediction.label) {
                 this.correctPredictionCount += 1;
             } else {
                 this.wrongPredictionCount += 1;
@@ -248,8 +250,8 @@ class UserPredictionMonitor extends React.Component {
 
         // when break or sync is on
         if (this.props.annotations.length > 0) {
-            const lastAnnotation = this.props.annotations[this.props.annotations.length - 1];
-            if ((lastAnnotation.label_name == 'BREAK' || lastAnnotation.label_name == 'SYNC') && lastAnnotation['stop_time'] == undefined) {
+            let lastMeAnnotation = Annotation.getLastAnnotation(Annotation.getMeAnnotations(this.props.annotations));
+            if (lastMeAnnotation != undefined && (lastMeAnnotation.label_name == 'BREAK' || lastMeAnnotation.label_name == 'SYNC') && lastMeAnnotation['stop_time'] == undefined) {
                 this.isResting = true;
             } else {
                 this.isResting = false;
@@ -305,7 +307,11 @@ class UserPredictionMonitor extends React.Component {
     getCurrentAnnotationLapsedTime() {
         // update annotation lapsed time (only mutual exclusive annotations)
         var meAnnotations = this.props.annotations.filter(({ is_mutual_exclusive, ...rest }) => is_mutual_exclusive);
-        this.currentAnnotationLapsedTime = this.state.currentTime - meAnnotations[meAnnotations.length - 1].start_time
+        if (meAnnotations.length > 0) {
+            this.currentAnnotationLapsedTime = this.state.currentTime - meAnnotations[meAnnotations.length - 1].start_time
+        } else {
+            this.currentAnnotationLapsedTime = 0
+        }
         return this.formatLapseTime(this.currentAnnotationLapsedTime);
     }
 

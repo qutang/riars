@@ -14,6 +14,7 @@ class RunProcessor extends React.Component {
                 <div className='run-processor-control'>
                     <Button type='primary' loading={this.props.isStartingProcessor} onClick={this.props.runProcessor}>Submit settings and run the processor</Button>
                     <Button loading={this.props.isStoppingProcessor} onClick={this.props.stopProcessor}>Stop the processor</Button>
+                    <Button loading={this.props.isUploadingAnnotations} onClick={this.props.uploadAnnotations}>Upload annotations</Button>
                 </div>
                 <div className='processor-monitors'>
                     <div className='expert-monitors'>

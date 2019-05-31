@@ -13,6 +13,7 @@ import Processor from './models/Processor';
 import Prediction from './models/Prediction';
 import ApiService from './models/ApiService';
 import Subject from './models/Subject';
+import Annotation from './models/Annotation';
 import { version } from '../package.json';
 import WebWorker from './webworkers/WebWorker';
 import buildSensorWorker from './webworkers/sensor_worker';
@@ -33,6 +34,7 @@ class App extends React.Component {
             isStoppingSensors: false,
             isStartingProcessor: false,
             isStoppingProcessor: false,
+            isUploadingAnnotations: false,
             accelerometerSamplingRate: 50,
             accelerometerDynamicRange: 8,
             predictions: [],
@@ -566,47 +568,80 @@ class App extends React.Component {
         if (processor != undefined && processor.status == 'running') {
             // append stop time to the last annotation
             this.completeAnnotation();
-            this.state.apiService.stopProcessor(processor, (p, status) => {
-                console.log(p);
-                if (status == 200) {
-                    const existingProcessors = this.state.processors;
-                    const updatedProcessors = existingProcessors.map((existingProcessor) => {
-                        if (existingProcessor.name == p.name) {
-                            existingProcessor.update(p);
-                        }
-                        return existingProcessor.clone();
-                    });
-                    this.setState({
-                        processors: updatedProcessors
-                    });
-                    this.state.apiService.disconnectProcessor(processor);
-                    message.success('uploading prediction corrections...')
-                    this.state.apiService.uploadPredictions(this.state.predictions, processor.name, (m) => {
-                        if (m == 'success') {
-                            message.success('uploaded prediction corrections...')
-                            this.setState({
-                                predictions: []
-                            });
-                        } else {
-                            message.error('failed to upload prediction corrections!')
-                        }
-                    });
-                    message.success('uploading annotations...')
-                    this.state.apiService.uploadAnnotations(this.state.annotations, processor.name, (m) => {
-                        if (m == 'success') {
-                            message.success('uploaded annotations...')
-                            this.setState({
-                                annotations: []
-                            });
-                        } else {
-                            message.error('failed to upload annotations!')
-                        }
-                    });
-                } else {
-                    message.error('Failed to stop selected processor');
-                }
-            });
+            // upload annotations first
+            this.uploadAnnotations(true);
+            // upload corrections
+            this.uploadCorrections();
+            // stop processor
+            this._stopProcessor(processor);
         }
+    }
+
+    _stopProcessor(processor) {
+        this.state.apiService.stopProcessor(processor, (p, status) => {
+            console.log(p);
+            if (status == 200) {
+                const existingProcessors = this.state.processors;
+                const updatedProcessors = existingProcessors.map((existingProcessor) => {
+                    if (existingProcessor.name == p.name) {
+                        existingProcessor.update(p);
+                    }
+                    return existingProcessor.clone();
+                });
+                this.setState({
+                    processors: updatedProcessors
+                });
+                this.state.apiService.disconnectProcessor(processor);
+
+            } else {
+                message.error('Failed to stop selected processor');
+            }
+        });
+    }
+
+    uploadAnnotations() {
+        this.setState({
+            isUploadingAnnotations: true
+        });
+        let processor = this.state.processors.filter(p => p.selected);
+        processor = processor.length > 0 ? processor[0] : undefined;
+        message.success('uploading annotations...');
+        let annotations = this._completeAnnotations([...this.state.annotations]);
+        this.state.apiService.uploadAnnotations(annotations, processor.name, (m) => {
+            if (m == 'success') {
+                message.success('uploaded annotations...')
+                if (this.state.isStoppingProcessor) {
+                    console.log('reset annotations');
+                    this.setState({
+                        annotations: []
+                    })
+                }
+                this.setState({
+                    isUploadingAnnotations: false
+                });
+            } else {
+                message.error('failed to upload annotations!')
+                this.setState({
+                    isUploadingAnnotations: false
+                });
+            }
+        });
+    }
+
+    uploadCorrections() {
+        let processor = this.state.processors.filter(p => p.selected);
+        processor = processor.length > 0 ? processor[0] : undefined;
+        message.success('uploading prediction corrections...')
+        this.state.apiService.uploadPredictions(this.state.predictions, processor.name, (m) => {
+            if (m == 'success') {
+                message.success('uploaded prediction corrections...')
+                this.setState({
+                    predictions: []
+                });
+            } else {
+                message.error('failed to upload prediction corrections!')
+            }
+        });
     }
 
     correctLabel(index, label) {
@@ -688,7 +723,14 @@ class App extends React.Component {
     }
 
     completeAnnotation() {
-        const annotations = this.state.annotations;
+        let updatedAnnotations = this._completeAnnotations([...this.state.annotations]);
+        this.setState({
+            annotations: updatedAnnotations
+        });
+    }
+
+    _completeAnnotations(inputAnnotations) {
+        let annotations = Annotation.copyAnnotations(inputAnnotations);
         const currentTs = new Date().getTime() / 1000.0;
         if (annotations.length > 0) {
             var meAnnotations = annotations.filter(({ is_mutual_exclusive, ...rest }) => is_mutual_exclusive);
@@ -706,10 +748,7 @@ class App extends React.Component {
                 return annotation;
             });
         }
-        const updatedAnnotations = annotations.slice(0);
-        this.setState({
-            annotations: updatedAnnotations
-        });
+        return annotations;
     }
 
     addPredictionNote(index, note) {
@@ -777,7 +816,7 @@ class App extends React.Component {
             title: 'Run and monitor',
             subTitle: 'start experiment session',
             description: 'Use the "Processors" tab to review the settings of different processors and confirm the selected processor. Click "Submit settings and run the processor" to start running the processor and generate predictions. Click "Stop the processor" to stop the running processor. On the left monitor panel, you may see the visualization display that is optimized for experts; on the right monitor panel, you may see the visualization display shown to the subject (novice user).',
-            content: <RunProcessor runProcessor={this.runProcessor.bind(this)} processors={this.state.processors} stopProcessor={this.stopProcessor.bind(this)} isStartingProcessor={this.state.isStartingProcessor} isStoppingProcessor={this.state.isStoppingProcessor} predictions={this.state.predictions} annotations={this.state.annotations} annotate={this.annotate.bind(this)} numOfPastPredictions={this.state.numOfPastPredictions} correctLabel={this.correctLabel.bind(this)} addPredictionNote={this.addPredictionNote.bind(this)} changeNumOfPastPredictions={this.changeNumOfPastPredictions.bind(this)} />,
+            content: <RunProcessor runProcessor={this.runProcessor.bind(this)} processors={this.state.processors} stopProcessor={this.stopProcessor.bind(this)} uploadAnnotations={this.uploadAnnotations.bind(this)} isStartingProcessor={this.state.isStartingProcessor} isStoppingProcessor={this.state.isStoppingProcessor} isUploadingAnnotations={this.state.isUploadingAnnotations} predictions={this.state.predictions} annotations={this.state.annotations} annotate={this.annotate.bind(this)} numOfPastPredictions={this.state.numOfPastPredictions} correctLabel={this.correctLabel.bind(this)} addPredictionNote={this.addPredictionNote.bind(this)} changeNumOfPastPredictions={this.changeNumOfPastPredictions.bind(this)} />,
             validateNext: () => null,
             validateBack: () => null
         }];
