@@ -243,6 +243,7 @@ class ApiService {
                 const processorJson = response.data;
                 const processors = processorJson.map((jsonObj, index) => {
                     const processor = Processor.fromJSON(jsonObj);
+                    processor.host = this.host;
                     return processor;
                 });
                 callback(processors, 200);
