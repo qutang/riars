@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import { Select, Icon, Divider, Modal, Input, Tooltip, InputNumber, message } from 'antd';
 import './SubjectList.css';
+import WeightSetting from './WeightSetting';
+import HeightSetting from './HeightSetting';
 
 class SubjectList extends React.Component {
     constructor(props) {
@@ -18,7 +20,7 @@ class SubjectList extends React.Component {
             heart_rate: 0,
             dress: 'Business Casual',
             shoes: 'Sneakers',
-            dominant_hand: 'Right', 
+            dominant_hand: 'Right',
             dominant_foot: 'Right'
         }
     }
@@ -125,31 +127,17 @@ class SubjectList extends React.Component {
                     </div>
 
                     <div className='create-subject-item'>
-                        <span>Weight (kg)</span>
-                        <InputNumber className='create-subject-item-control'
-                            onChange={(value) => {
-                                this.newSubjSetting.weight = value;
-                            }}
-                            placeholder="Enter weight (kg)"
-                            min={0}
-                            max={150}
-                            step={1}
-                            defaultValue={60}
-                        />
+                        <span>Weight</span>
+                        <WeightSetting changeWeight={(value) => {
+                            this.newSubjSetting.weight = value;
+                        }} />
                     </div>
 
                     <div className="create-subject-item">
-                        <span>Height (meter)</span>
-                        <InputNumber className='create-subject-item-control'
-                            onChange={(value) => {
-                                this.newSubjSetting.height = value;
-                            }}
-                            placeholder="Enter height (meter)"
-                            min={0.00}
-                            max={2.50}
-                            step={0.01}
-                            defaultValue={1.80}
-                        />
+                        <span>Height</span>
+                        <HeightSetting changeHeight={(value) => {
+                            this.newSubjSetting.height = value;
+                        }} />
                     </div>
 
                     <div className="create-subject-item">
