@@ -35,7 +35,7 @@ class App extends React.Component {
             isStartingProcessor: false,
             isStoppingProcessor: false,
             isUploadingAnnotations: false,
-            accelerometerSamplingRate: 50,
+            accelerometerSamplingRate: 100,
             accelerometerDynamicRange: 8,
             predictions: [],
             annotations: [],
