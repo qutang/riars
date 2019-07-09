@@ -569,7 +569,7 @@ class App extends React.Component {
             // append stop time to the last annotation
             this.completeAnnotation();
             // upload annotations first
-            this.uploadAnnotations(true);
+            this.uploadAnnotations();
             // upload corrections
             this.uploadCorrections();
             // stop processor
@@ -607,6 +607,7 @@ class App extends React.Component {
         processor = processor.length > 0 ? processor[0] : undefined;
         message.success('uploading annotations...');
         let annotations = this._completeAnnotations([...this.state.annotations]);
+        console.log(annotations)
         this.state.apiService.uploadAnnotations(annotations, processor.name, (m) => {
             if (m == 'success') {
                 message.success('uploaded annotations...')
@@ -663,16 +664,18 @@ class App extends React.Component {
             annotations.push({
                 label_name: label.name,
                 start_time: new Date().getTime() / 1000.0,
-                is_mutual_exclusive: label.isMutualExclusive
+                is_mutual_exclusive: label.isMutualExclusive,
+                category: label.category
             });
         } else {
             if (label.isMutualExclusive) {
-                var mutualExclusiveAnnotations = annotations.filter(({ is_mutual_exclusive, ...rest }) => is_mutual_exclusive);
+                var mutualExclusiveAnnotations = annotations.filter(({ is_mutual_exclusive, category, ...rest }) => is_mutual_exclusive && category == label.category);
                 if (mutualExclusiveAnnotations.length == 0) {
                     annotations.push({
                         label_name: label.name,
                         start_time: new Date().getTime() / 1000.0,
-                        is_mutual_exclusive: label.isMutualExclusive
+                        is_mutual_exclusive: label.isMutualExclusive,
+                        category: label.category
                     });
                 } else {
                     const lastMeAnnotation = mutualExclusiveAnnotations[mutualExclusiveAnnotations.length - 1];
@@ -682,25 +685,28 @@ class App extends React.Component {
                             annotations.push({
                                 label_name: label.name,
                                 start_time: new Date().getTime() / 1000.0,
-                                is_mutual_exclusive: label.isMutualExclusive
+                                is_mutual_exclusive: label.isMutualExclusive,
+                                category: label.category
                             });
                         }
                     } else {
                         annotations.push({
                             label_name: label.name,
                             start_time: new Date().getTime() / 1000.0,
-                            is_mutual_exclusive: label.isMutualExclusive
+                            is_mutual_exclusive: label.isMutualExclusive,
+                            category: label.category
                         });
                     }
                 }
             }
             else {
-                var notMeSameAnnotations = annotations.filter(({ is_mutual_exclusive, label_name, ...rest }) => !is_mutual_exclusive && label_name === label.name);
+                var notMeSameAnnotations = annotations.filter(({ is_mutual_exclusive, label_name, category, ...rest }) => !is_mutual_exclusive && label_name === label.name && category == label.category);
                 if (notMeSameAnnotations.length == 0) {
                     annotations.push({
                         label_name: label.name,
                         start_time: new Date().getTime() / 1000.0,
-                        is_mutual_exclusive: label.isMutualExclusive
+                        is_mutual_exclusive: label.isMutualExclusive,
+                        category: label.category
                     });
                 } else {
                     var lastNotMeSameAnnotation = notMeSameAnnotations[notMeSameAnnotations.length - 1];
@@ -710,7 +716,8 @@ class App extends React.Component {
                         annotations.push({
                             label_name: label.name,
                             start_time: new Date().getTime() / 1000.0,
-                            is_mutual_exclusive: label.isMutualExclusive
+                            is_mutual_exclusive: label.isMutualExclusive,
+                            category: label.category
                         });
                     }
                 }
@@ -733,16 +740,8 @@ class App extends React.Component {
         let annotations = Annotation.copyAnnotations(inputAnnotations);
         const currentTs = new Date().getTime() / 1000.0;
         if (annotations.length > 0) {
-            var meAnnotations = annotations.filter(({ is_mutual_exclusive, ...rest }) => is_mutual_exclusive);
-            var notMeAnnotations = annotations.filter(({ is_mutual_exclusive, ...rest }) => !is_mutual_exclusive);
-            if (meAnnotations.length > 0) {
-                const lastMeAnnotation = meAnnotations[meAnnotations.length - 1];
-                if (lastMeAnnotation['stop_time'] == undefined) {
-                    lastMeAnnotation['stop_time'] = currentTs;
-                }
-            }
-            notMeAnnotations = notMeAnnotations.map(annotation => {
-                if (annotation['stop_time'] == undefined) {
+            annotations = annotations.map(function(annotation) {
+                if(annotation['stop_time'] == undefined) {
                     annotation['stop_time'] = currentTs;
                 }
                 return annotation;
