@@ -7,7 +7,7 @@
     "antd": "^3.16.3",
     "axios": "^0.18.1",
     "chart.js": "^2.8.0",
-    "file-loader": "^3.0.1",
+    "file-loader": "^4.2.0",
     "howler": "^2.1.2",
     "moment": "^2.24.0",
     "react": "^16.9.0",
