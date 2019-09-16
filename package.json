@@ -4,8 +4,8 @@
   "description": "Real-time interactive activity recognition system",
   "main": "index.js",
   "dependencies": {
+    "axios": "^0.19.0",
     "antd": "^3.23.2",
-    "axios": "^0.18.1",
     "chart.js": "^2.8.0",
     "file-loader": "^4.2.0",
     "howler": "^2.1.2",
