@@ -11,7 +11,8 @@ const buildProcessorWorker = function () {
 
 
         this.getWebSocketUrl = function () {
-            return 'ws://' + this.host + ':' + this.port;
+            if (this.host === "localhost" || this.host === "0.0.0.0")
+                return 'ws://127.0.0.1:' + this.port;
         }
 
         this.postData = function () {

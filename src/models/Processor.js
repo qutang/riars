@@ -186,7 +186,7 @@ class Processor {
             processor.selected = true
         } else {
             processor.selected = false
-            processor.host = 'localhost'
+            processor.host = '0.0.0.0'
             processor.port = 9000
             processor.numberOfWindows = 0
             processor.windowSize = 12.8

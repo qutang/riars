@@ -132,7 +132,7 @@ class ApiService {
             sensor.selected = true;
             sensor.order = deviceJson.order;
           } else {
-            sensor.host = "localhost";
+            sensor.host = "0.0.0.0";
             sensor.port = 8000;
             sensor.order = sensor.port;
           }
@@ -157,7 +157,7 @@ class ApiService {
             sensor.selected = true;
             sensor.order = deviceJson.order;
           } else {
-            sensor.host = "localhost";
+            sensor.host = "0.0.0.0";
             sensor.port = 8000;
             sensor.order = sensor.port;
           }
@@ -293,7 +293,7 @@ class ApiService {
   }
 
   connectProcessor(processor, callback) {
-    const handleWebworkerMessage = function(e) {
+    const handleWebworkerMessage = function (e) {
       if (e.data.action == "error") {
         callback("error");
       } else if (e.data.action == "data") {
