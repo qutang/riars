@@ -27,43 +27,11 @@
     flex-wrap: wrap;
 }
 
-.prediction-tag {
-    width: 120px;
-    display: block;
-}
-
-.annotation-tag {
-    width: 120px;
-    display: block;
-}
-
-.annotation-tag-tag {
-    width: 120px;
-    display: block;
-}
-
 .user-prediction-monitor-control {
     width: 95%;
     margin: 0 auto;
     display: flex;
     flex-direction: row;
-}
-
-
-.prediction-tag > span {
-    display: block;
-    width: 100%;
-    padding: 0.8em 0.3em;
-    font-size: 1.3em;
-    text-align: center;
-}
-
-.annotation-tag > span {
-    display: block;
-    width: 100%;
-    padding: 0.8em 0.3em;
-    font-size: 1.3em;
-    text-align: center;
 }
 
 .prediction-note {

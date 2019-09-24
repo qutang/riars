@@ -1,6 +1,5 @@
 import React, { Component } from "react";
-import { Input } from "antd";
-import AnnotationTag from "./AnnotationTag";
+import AnnotationTag from "./annotation_tag/AnnotationTag";
 import Annotation from "../models/Annotation";
 
 class AnnotationPanel extends React.Component {

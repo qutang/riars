@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { Input } from 'antd';
-import PredictionTag from './PredictionTag';
+import PredictionTag from './prediction_tag/PredictionTag';
 
 
 class PredictionTagGroup extends React.Component {

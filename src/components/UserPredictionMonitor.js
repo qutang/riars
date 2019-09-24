@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { Slider, Spin, Icon, Statistic } from "antd";
 import PredictionTagGroup from "./PredictionTagGroup";
 import AnnotationPanel from "./AnnotationPanel";
-import AnnotationTag from "./AnnotationTag";
+import AnnotationTag from "./annotation_tag/AnnotationTag";
 import Annotation from "../models/Annotation";
 import VoiceFeedback from "../models/VoiceFeedback";
 import "./UserPredictionMonitor.css";

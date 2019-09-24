@@ -1,0 +1,13 @@
+
+.prediction-tag {
+    width: 120px;
+    display: block;
+}
+
+.prediction-tag > span {
+    display: block;
+    width: 100%;
+    padding: 0.8em 0.3em;
+    font-size: 1.3em;
+    text-align: center;
+}

@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import { Tag } from "antd";
-import Prediction from "../models/Prediction";
+import Prediction from "../../models/Prediction";
+import "./AnnotationTag.css";
 
 class AnnotationTag extends React.Component {
   constructor(props) {

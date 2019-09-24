@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Tag, Badge, Button } from 'antd';
-import Prediction from '../models/Prediction';
+import Prediction from '../../models/Prediction';
+import "./PredictionTag.css";
 
 
 class PredictionTag extends React.Component {
