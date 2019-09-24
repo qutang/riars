@@ -4,14 +4,13 @@ import AnnotationTag from './AnnotationTag';
 export default { title: 'AnnotationTag' };
 
 export const mutual_exclusive_activity = () => {
-        return (
-            <>
-                <AnnotationTag label={{category: 'activity', name: 'Not selected', isMutualExclusive: true}}  isOn={false} />
-                <AnnotationTag label={{category: 'activity', name: 'Selected', isMutualExclusive: true}}  isOn={true} />
-            </>
-        )
-    }
-;
+    return (
+        <>
+            <AnnotationTag label={{category: 'activity', name: 'Not selected', isMutualExclusive: true}}  isOn={false} />
+            <AnnotationTag label={{category: 'activity', name: 'Selected', isMutualExclusive: true}}  isOn={true} />
+        </>
+    )
+}
 
 export const not_mutual_exclusive_activity = () => {
     return (
@@ -21,7 +20,6 @@ export const not_mutual_exclusive_activity = () => {
         </>
     )
 }
-;
 
 export const mutual_exclusive_session = () => {
     return (
@@ -31,7 +29,6 @@ export const mutual_exclusive_session = () => {
         </>
     )
 }
-;
 
 export const not_mutual_exclusive_session = () => {
 return (
@@ -41,4 +38,3 @@ return (
     </>
 )
 }
-;
