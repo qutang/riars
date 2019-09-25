@@ -1,8 +1,7 @@
 import React, { Component } from "react";
-import { Slider, Spin, Icon, Statistic } from "antd";
+import { Slider, Spin, Icon } from "antd";
 import PredictionTagGroup from "./PredictionTagGroup";
 import AnnotationPanel from "./AnnotationPanel";
-import AnnotationTag from "./annotation_tag/AnnotationTag";
 import Annotation from "../models/Annotation";
 import VoiceFeedback from "../models/VoiceFeedback";
 import "./UserPredictionMonitor.css";
@@ -18,6 +17,7 @@ class UserPredictionMonitor extends React.Component {
       voiceFeedbackInterval: 13,
       beepOn: false
     };
+    this.voiceFiredForCurrentPrediction = false;
     this.correctPredictionCount = 0;
     this.wrongPredictionCount = 0;
     this.voiceFeedbackTimer = 0;
@@ -69,16 +69,11 @@ class UserPredictionMonitor extends React.Component {
     this.setState({
       isPredicting: true
     });
+    this.voiceFiredForCurrentPrediction = false;
   }
 
-  onFinishPrediction() {
-    this.inferenceDelay =
-      this.state.currentTime -
-      this.props.predictions[this.props.predictions.length - 1].stopTime;
-    this.lastNumOfPredictions = this.props.predictions.length;
-    this.setState({
-      isPredicting: false
-    });
+  decideFeedback(lastPrediction) {
+    
     let activityAnnotations = Annotation.getMeAnnotations(
       this.props.annotations,
       "activity"
@@ -86,15 +81,11 @@ class UserPredictionMonitor extends React.Component {
     let lastActivityAnnotation = Annotation.getLastAnnotation(
       activityAnnotations
     );
-    let lastPrediction = this.props.predictions[
-      this.props.predictions.length - 1
-    ];
-    const systemPrediction = lastPrediction.getTopN(1)[0];
-
     const variationStatus = Annotation.getVariationStatus(
       this.props.annotations
     );
 
+    const systemPrediction = lastPrediction.getTopN(1)[0];
     // decide when to auto beep to remind switching
     if (
       lastActivityAnnotation != undefined &&
@@ -118,14 +109,14 @@ class UserPredictionMonitor extends React.Component {
       ) {
         this.correctPredictionCount = 0;
         this.wrongPredictionCount = 0;
-        // beep to switch when we detect three consecutive success predictions or eight consecutive wrong predictions
+        // beep to switch when we detect 2 consecutive success predictions or 4 consecutive wrong predictions
         this.setState({
           beepOn: true
         });
         this.voiceFeedback.playSwitch(
           function onSwitchEnd() {
             this.setState({
-              beepOn: false6
+              beepOn: false
             });
           }.bind(this)
         );
@@ -136,10 +127,37 @@ class UserPredictionMonitor extends React.Component {
         //     });
         //   }.bind(this)
         // );
+      } else {
+        if(!this.voiceFiredForCurrentPrediction){
+          this.runVoiceFeedback(lastPrediction);
+        }
       }
     } else {
       this.correctPredictionCount = 0;
       this.wrongPredictionCount = 0;
+      if(!this.voiceFiredForCurrentPrediction){
+        this.runVoiceFeedback(lastPrediction);
+      }
+    }
+  }
+
+  onFinishPrediction() {
+    this.inferenceDelay =
+      this.state.currentTime -
+      this.props.predictions[this.props.predictions.length - 1].stopTime;
+    
+    this.setState({
+      isPredicting: false
+    });
+
+    this.lastNumOfPredictions = this.props.predictions.length;
+
+    let lastPrediction = this.props.predictions[
+      this.props.predictions.length - 1
+    ];
+    
+    if (this.props.predictions.length >= 3){
+      this.decideFeedback(lastPrediction);
     }
   }
 
@@ -161,26 +179,22 @@ class UserPredictionMonitor extends React.Component {
     }, 1000);
   }
 
-  runVoiceFeedback() {
-    if (!this.isResting && this.props.predictions.length > 1) {
-      const lastPrediction = this.props.predictions[
-        this.props.predictions.length - 1
-      ];
-      this.voiceFeedback.speakPrediction(lastPrediction).then(
-        success => {
-          if (success) {
-            this.onVoiceFeedbackEnd();
-          }
-        },
-        function(error) {
-          console.error(error);
+  runVoiceFeedback(currentPrediction) {
+    this.voiceFiredForCurrentPrediction = true;
+    this.voiceFeedback.speakPrediction(currentPrediction).then(
+      success => {
+        if (success) {
           this.onVoiceFeedbackEnd();
         }
-      );
-      this.setState({
-        voiceOn: true
-      });
-    }
+      },
+      function(error) {
+        console.error(error);
+        this.onVoiceFeedbackEnd();
+      }
+    );
+    this.setState({
+      voiceOn: true
+    });
   }
 
   renderPastPredictions(n) {
@@ -270,6 +284,12 @@ class UserPredictionMonitor extends React.Component {
       annotate: this.props.annotate
     }));
     labels.push({
+      name: "STRETCHING",
+      isMutualExclusive: true,
+      category: "activity",
+      annotate: this.props.annotate,
+    });
+    labels.push({
       name: "SYNC",
       isMutualExclusive: true,
       category: "activity",
@@ -298,6 +318,12 @@ class UserPredictionMonitor extends React.Component {
       isMutualExclusive: true,
       category: "session",
       annotate: this.switchVariationStatus.bind(this)
+    });
+    labels.push({
+      name: "Warm up",
+      isMutualExclusive: false,
+      category: "session",
+      annotate: this.switchWarmUpStatus.bind(this)
     });
     return labels;
   }
@@ -334,16 +360,11 @@ class UserPredictionMonitor extends React.Component {
     this.correctPredictionCount = 0;
     this.wrongPredictionCount = 0;
     this.props.annotate(label);
+  }
 
-    // if (label.name == "Variation I") {
-    //   this.setState({
-    //     variationOneIsOn: !this.state.variationOneIsOn
-    //   });
-    // } else if (label.name == "Variation II") {
-    //   this.setState({
-    //     variationTwoIsOn: !this.state.variationTwoIsOn
-    //   });
-    // }
+  switchWarmUpStatus(label) {
+    console.log("switching warm-up status");
+    this.props.annotate(label);
   }
 
   onRun() {
@@ -510,9 +531,9 @@ class UserPredictionMonitor extends React.Component {
   }
 
   componentDidUpdate() {
-    if (this.voiceCountDown <= 0) {
-      this.runVoiceFeedback();
-    }
+    // if (this.voiceCountDown <= 0) {
+    //   this.runVoiceFeedback();
+    // }
   }
 
   render() {

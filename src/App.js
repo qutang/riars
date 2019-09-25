@@ -501,6 +501,39 @@ class App extends React.Component {
         });
     }
 
+    generateWarmUpFakePrediction(variationStage) {
+        var scripts = []
+        if (variationStage === 'Variation I') {
+            scripts.push({
+            label: "STRETCHING",
+            score: Math.random(),
+            });
+            scripts.push({
+            label: Math.random() > 0.5 ? "STANDING AND USING A COMPUTER" : "SWEEPING",
+            score: Math.random(),
+            });
+        } else if (variationStage === 'Variation II') {
+            scripts.push({
+            label: "STRETCHING",
+            score: Math.random(),
+            });
+            scripts.push({
+            label: Math.random() > 0.5 ? "SITTING AND USING A COMPUTER" : "SWEEPING",
+            score: Math.random(),
+            });
+        } else {
+            scripts.push({
+            label: "STRETCHING",
+            score: 1.0,
+            });
+            scripts.push({
+            label: Math.random() > 0.5 ? "SITTING AND USING A COMPUTER" : "SWEEPING",
+            score: Math.random() * 0.5,
+            });
+        }
+        return scripts;
+    }
+
     runProcessor() {
         this.setState({
             isStartingProcessor: true
@@ -529,12 +562,25 @@ class App extends React.Component {
                                 isStoppingProcessor: false
                             });
                         } else {
+                            const isWarmUpOn = Annotation.isWarmUpOn(this.state.annotations);
+                            const variationStage = Annotation.getVariationStatus(this.state.annotations);
                             let updatedPredictions = [];
                             const existingPredictions = this.state.predictions;
-                            const newPredictions = data.map(predictionJson => {
-                                const prediction = Prediction.fromJSON(predictionJson);
-                                return prediction;
-                            });
+                            var newPredictions;
+                            if (isWarmUpOn) {
+                                newPredictions = data.map(predictionJson => {
+                                    var predictionLabels = this.generateWarmUpFakePrediction(variationStage);
+                                    const prediction = new Prediction(predictionLabels);
+                                    prediction.startTime = predictionJson['START_TIME'];
+                                    prediction.stopTime = predictionJson['STOP_TIME'];
+                                    return prediction;
+                                });
+                            } else {
+                                newPredictions = data.map(predictionJson => {
+                                    const prediction = Prediction.fromJSON(predictionJson);
+                                    return prediction;
+                                });
+                            }
                             if (existingPredictions.length == 0) {
                                 updatedPredictions = newPredictions;
                             } else {

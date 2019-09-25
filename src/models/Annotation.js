@@ -37,6 +37,24 @@ var getVariationStatus = function(annotations) {
   }
 };
 
+var isWarmUpOn = function(annotations) {
+  var warmUpAnnotations = annotations.filter(
+    ({ is_mutual_exclusive, category, label_name, ...rest }) =>
+      !is_mutual_exclusive &&
+      category == "session" &&
+      label_name.includes("Warm up")
+  );
+  var lastWarmUpAnnotation = getLastAnnotation(warmUpAnnotations);
+  if (
+    lastWarmUpAnnotation != undefined &&
+    lastWarmUpAnnotation["stop_time"] == undefined
+  ) {
+    return true;
+  } else {
+    return false;
+  }
+};
+
 var getLastAnnotation = function(annotations) {
   return annotations.length > 0
     ? annotations[annotations.length - 1]
@@ -47,5 +65,6 @@ export default {
   copyAnnotations,
   getMeAnnotations,
   getLastAnnotation,
-  getVariationStatus
+  getVariationStatus,
+  isWarmUpOn
 };

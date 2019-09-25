@@ -18,6 +18,7 @@ class Prediction {
       RUNNING: "🏃‍️",
       "WALKING AT 2 MPH": "🚶 2",
       LYING: "🛌",
+      STRETCHING: "Stretch",
       "SITTING STILL": "Sit",
       "SITTING AND USING A COMPUTER": "Sit 💻",
       "SITTING AND WRITING": "Sit ✍",
@@ -53,6 +54,7 @@ class Prediction {
       "WALKING DOWNSTAIRS": "walking downstairs",
       "WALKING UPSTAIRS": "walking upstairs",
       UNKNOWN: "unknown",
+      STRETCHING: "stretching",
       "SELF-SELECTED FREE STANDING": "standing"
     };
   }
