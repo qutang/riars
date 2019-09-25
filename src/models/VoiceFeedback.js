@@ -75,6 +75,10 @@ class VoiceFeedback {
     return new Promise(speechPromise);
   }
 
+  playSwitch(onSwitchEnd) {
+    const switchHowler = this._speak("Switch", 1.0, onSwitchEnd)
+  }
+
   playBeep(onBeepEnd) {
     const beepHowler = new Howl({
       src: beepSoundFile

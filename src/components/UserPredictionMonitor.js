@@ -122,13 +122,20 @@ class UserPredictionMonitor extends React.Component {
         this.setState({
           beepOn: true
         });
-        this.voiceFeedback.playBeep(
-          function onBeepEnd() {
+        this.voiceFeedback.playSwitch(
+          function onSwitchEnd() {
             this.setState({
-              beepOn: false
+              beepOn: false6
             });
           }.bind(this)
         );
+        // this.voiceFeedback.playBeep(
+        //   function onBeepEnd() {
+        //     this.setState({
+        //       beepOn: false
+        //     });
+        //   }.bind(this)
+        // );
       }
     } else {
       this.correctPredictionCount = 0;

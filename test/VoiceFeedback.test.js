@@ -1,6 +1,7 @@
 import VoiceFeedback from '../src/models/VoiceFeedback';
 const assert = require('assert');
 
+describe('Voice feedback', function() {
 describe('voice-feedback', () => {
     it(
         "should play voice after clicking the run button on the right.", function(done) {
@@ -45,4 +46,20 @@ describe('beep-feedback', () => {
             });
         }
     )
+});
+
+describe('switch-feedback', () => {
+    it(
+        "should play 'switch' after clicking the run button on the right.", function(done) {
+            this.timeout(5000);
+            const voiceFeedback = new VoiceFeedback();
+            setTimeout(function() {
+                // wait a second then play, as the browser needs to first load voices 
+                voiceFeedback.playSwitch(function() {
+                    done();
+                });
+            }, 1000);
+        }
+    )
+});
 });

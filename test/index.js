@@ -8,5 +8,6 @@ if (module.hot) {
 }
 
 document.addEventListener('DOMContentLoaded', function(){
+    console.log(context.keys());
     context.keys().forEach(context);
 });
