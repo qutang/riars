@@ -9,6 +9,7 @@ class VoiceFeedback {
     this._voiceTexts = [];
     this._voiceVolumes = [];
     this._elapsedTime = 0;
+    this._threshold = 0.3;
     this._synth.onvoiceschanged = this.setVoice.bind(this);
     this._beepHowler = undefined;
   }
@@ -95,6 +96,8 @@ class VoiceFeedback {
 
   speakPrediction(prediction) {
     const topNPredictionSet = prediction.getTopN(3);
+    // threshold to cut off those <= 0.3
+    // const likelyTopPredictionSet = topNPredictionSet.filter(script => script.score > this._threshold);
     const predictionSets = topNPredictionSet.map(script => {
       return {
         label: Prediction.PREDEFINED_CLASS_TEXT[script.label],

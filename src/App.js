@@ -506,30 +506,42 @@ class App extends React.Component {
         if (variationStage === 'Variation I') {
             scripts.push({
             label: "STRETCHING",
-            score: Math.random(),
+            score: Math.random() * 0.7 + 0.2, // between 0.2 and 1
             });
             scripts.push({
             label: Math.random() > 0.5 ? "STANDING AND USING A COMPUTER" : "SWEEPING",
-            score: Math.random(),
+            score: Math.random() * 0.5 + 0.5, // between 0.5 and 1, higher chance to make mistake
             });
+            scripts.push({
+                label: Math.random() > 0.5 ? "SELF-SELECTED FREE STANDING" : "STANDING AND WRITING",
+                score: Math.random() * 0.4, // between 0 and 0.4, very lower chance to make mistake
+            })
         } else if (variationStage === 'Variation II') {
             scripts.push({
             label: "STRETCHING",
-            score: Math.random(),
+            score: Math.random() * 0.7 + 0.3, // between 0.2 and 1
             });
             scripts.push({
             label: Math.random() > 0.5 ? "SITTING AND USING A COMPUTER" : "SWEEPING",
-            score: Math.random(),
+            score: Math.random() * 0.5 + 0.5, // between 0.5 and 1, higher chance to make mistake
+            });
+            scripts.push({
+                label: Math.random() > 0.5 ? "SITTING" : "LYING",
+                score: Math.random() * 0.6, // between 0 and 0.6, lower chance to make mistake
             });
         } else {
             scripts.push({
             label: "STRETCHING",
-            score: 1.0,
+            score: 1.0, // always at the top
             });
             scripts.push({
-            label: Math.random() > 0.5 ? "SITTING AND USING A COMPUTER" : "SWEEPING",
-            score: Math.random() * 0.5,
+            label: Math.random() > 0.5 ? "STANDING AND USING A COMPUTER" : "SWEEPING",
+            score: Math.random() * 0.5 + 0.3, // middle range
             });
+            scripts.push({
+                label: Math.random() > 0.5 ? "SELF-SELECTED FREE STANDING" : "STANDING AND WRITING",
+                score: Math.random() * 0.3, // low range
+            })
         }
         return scripts;
     }
