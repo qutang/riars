@@ -25,7 +25,6 @@ class UserPredictionMonitor extends React.Component {
     this.lastNumOfPredictions = 0;
     this.windowStartTime = 0;
     this.calibrationCountDown = 100;
-    this.voiceCountDown = 1000;
     this.predictionTime = 0;
     this.voiceFeedback = new VoiceFeedback();
     this.selectedProcessor = undefined;
@@ -511,24 +510,24 @@ class UserPredictionMonitor extends React.Component {
     return this.getCurrentProcessor().windowSize;
   }
 
-  getVoiceFeedbackCountDown() {
-    if (this.voiceFeedbackTimer == 0 && !this.isResting) {
-      this.voiceFeedbackTimer =
-        this.state.currentTime + this.state.voiceFeedbackInterval;
-      return this.state.voiceFeedbackInterval + " seconds";
-    } else if (this.voiceFeedbackTimer != 0 && !this.isResting) {
-      this.voiceCountDown = Math.round(
-        this.voiceFeedbackTimer - this.state.currentTime
-      );
-      if (this.voiceCountDown <= 0) {
-        this.voiceFeedbackTimer += this.state.voiceFeedbackInterval;
-      }
-      return this.voiceCountDown + " seconds";
-    } else if (this.isResting) {
-      this.voiceFeedbackTimer = 0;
-      return "In break";
-    }
-  }
+  // getVoiceFeedbackCountDown() {
+  //   if (this.voiceFeedbackTimer == 0 && !this.isResting) {
+  //     this.voiceFeedbackTimer =
+  //       this.state.currentTime + this.state.voiceFeedbackInterval;
+  //     return this.state.voiceFeedbackInterval + " seconds";
+  //   } else if (this.voiceFeedbackTimer != 0 && !this.isResting) {
+  //     this.voiceCountDown = Math.round(
+  //       this.voiceFeedbackTimer - this.state.currentTime
+  //     );
+  //     if (this.voiceCountDown <= 0) {
+  //       this.voiceFeedbackTimer += this.state.voiceFeedbackInterval;
+  //     }
+  //     return this.voiceCountDown + " seconds";
+  //   } else if (this.isResting) {
+  //     this.voiceFeedbackTimer = 0;
+  //     return "In break";
+  //   }
+  // }
 
   componentDidUpdate() {
     // if (this.voiceCountDown <= 0) {
@@ -553,7 +552,7 @@ class UserPredictionMonitor extends React.Component {
               onChange={this.props.changeNumOfPastPredictions}
             />
           </div>
-          <div className="user-prediction-monitor-control-item">
+          {/* <div className="user-prediction-monitor-control-item">
             <h4>
               Voice feedback interval (every {this.state.voiceFeedbackInterval}{" "}
               seconds){" "}
@@ -566,12 +565,12 @@ class UserPredictionMonitor extends React.Component {
               value={this.state.voiceFeedbackInterval}
               onChange={this.changeVoiceFeedbackInterval.bind(this)}
             />
-          </div>
+          </div> */}
           <div className="user-prediction-monitor-control-item">
             <h3>
-              Lapsed time: {this.getSessionLapseTime()}, Voice feedback count
-              down: {this.getVoiceFeedbackCountDown()}, Inference delay:{" "}
-              {Math.round(this.inferenceDelay * 10) / 10.0}
+              <span>Lapsed time: {this.getSessionLapseTime()},</span>
+              {/* <span>Voice feedback count down: {this.getVoiceFeedbackCountDown()},</span> */}
+              <span>Inference delay:{" "}{Math.round(this.inferenceDelay * 10) / 10.0}</span>
             </h3>
           </div>
         </div>
