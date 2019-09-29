@@ -103,12 +103,12 @@ class UserPredictionMonitor extends React.Component {
       }
       if (
         this.correctPredictionCount >= 2 ||
-        this.wrongPredictionCount >= 5 ||
-        this.correctPredictionCount + this.wrongPredictionCount >= 5
+        this.wrongPredictionCount >= 3 ||
+        this.correctPredictionCount + this.wrongPredictionCount >= 3
       ) {
         this.correctPredictionCount = 0;
         this.wrongPredictionCount = 0;
-        // beep to switch when we detect 2 consecutive success predictions or 4 consecutive wrong predictions
+        // beep to switch when we detect 2 consecutive success predictions or 3 consecutive wrong predictions
         this.setState({
           beepOn: true
         });
