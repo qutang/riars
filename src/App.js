@@ -505,12 +505,12 @@ class App extends React.Component {
         var scripts = []
         if (variationStage === 'Variation I') {
             scripts.push({
-            label: "STRETCHING",
-            score: Math.random() * 0.7 + 0.2, // between 0.2 and 1
+                label: "STRETCHING",
+                score: Math.random() * 0.7 + 0.2, // between 0.2 and 1
             });
             scripts.push({
-            label: Math.random() > 0.5 ? "STANDING AND USING A COMPUTER" : "SWEEPING",
-            score: Math.random() * 0.5 + 0.5, // between 0.5 and 1, higher chance to make mistake
+                label: Math.random() > 0.5 ? "STANDING AND USING A COMPUTER" : "SWEEPING",
+                score: Math.random() * 0.5 + 0.5, // between 0.5 and 1, higher chance to make mistake
             });
             scripts.push({
                 label: Math.random() > 0.5 ? "SELF-SELECTED FREE STANDING" : "STANDING AND WRITING",
@@ -518,25 +518,25 @@ class App extends React.Component {
             })
         } else if (variationStage === 'Variation II') {
             scripts.push({
-            label: "STRETCHING",
-            score: Math.random() * 0.7 + 0.3, // between 0.2 and 1
+                label: "STRETCHING",
+                score: Math.random() * 0.7 + 0.3, // between 0.2 and 1
             });
             scripts.push({
-            label: Math.random() > 0.5 ? "SITTING AND USING A COMPUTER" : "SWEEPING",
-            score: Math.random() * 0.5 + 0.5, // between 0.5 and 1, higher chance to make mistake
+                label: Math.random() > 0.5 ? "SITTING AND USING A COMPUTER" : "SWEEPING",
+                score: Math.random() * 0.5 + 0.5, // between 0.5 and 1, higher chance to make mistake
             });
             scripts.push({
-                label: Math.random() > 0.5 ? "SITTING" : "LYING",
+                label: Math.random() > 0.5 ? "SITTING STILL" : "LYING",
                 score: Math.random() * 0.6, // between 0 and 0.6, lower chance to make mistake
             });
         } else {
             scripts.push({
-            label: "STRETCHING",
-            score: 1.0, // always at the top
+                label: "STRETCHING",
+                score: 1.0, // always at the top
             });
             scripts.push({
-            label: Math.random() > 0.5 ? "STANDING AND USING A COMPUTER" : "SWEEPING",
-            score: Math.random() * 0.5 + 0.3, // middle range
+                label: Math.random() > 0.5 ? "STANDING AND USING A COMPUTER" : "SWEEPING",
+                score: Math.random() * 0.5 + 0.3, // middle range
             });
             scripts.push({
                 label: Math.random() > 0.5 ? "SELF-SELECTED FREE STANDING" : "STANDING AND WRITING",
@@ -798,8 +798,8 @@ class App extends React.Component {
         let annotations = Annotation.copyAnnotations(inputAnnotations);
         const currentTs = new Date().getTime() / 1000.0;
         if (annotations.length > 0) {
-            annotations = annotations.map(function(annotation) {
-                if(annotation['stop_time'] == undefined) {
+            annotations = annotations.map(function (annotation) {
+                if (annotation['stop_time'] == undefined) {
                     annotation['stop_time'] = currentTs;
                 }
                 return annotation;
