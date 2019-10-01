@@ -1,4 +1,4 @@
-var copyAnnotations = function(annotations) {
+var copyAnnotations = function (annotations) {
   return annotations.map(
     ({ label_name, start_time, stop_time, is_mutual_exclusive, category }) => {
       return {
@@ -12,14 +12,14 @@ var copyAnnotations = function(annotations) {
   );
 };
 
-var getMeAnnotations = function(annotations, cat) {
+var getMeAnnotations = function (annotations, cat) {
   return annotations.filter(
     ({ is_mutual_exclusive, category, ...rest }) =>
       is_mutual_exclusive && category == cat
   );
 };
 
-var getVariationStatus = function(annotations) {
+var getVariationStatus = function (annotations) {
   var variationAnnotations = annotations.filter(
     ({ is_mutual_exclusive, category, label_name, ...rest }) =>
       is_mutual_exclusive &&
@@ -37,7 +37,7 @@ var getVariationStatus = function(annotations) {
   }
 };
 
-var isWarmUpOn = function(annotations) {
+var isWarmUpOn = function (annotations) {
   var warmUpAnnotations = annotations.filter(
     ({ is_mutual_exclusive, category, label_name, ...rest }) =>
       !is_mutual_exclusive &&
@@ -55,7 +55,25 @@ var isWarmUpOn = function(annotations) {
   }
 };
 
-var getLastAnnotation = function(annotations) {
+var isInTransition = function (annotations) {
+  var transitionAnnotations = annotations.filter(
+    ({ is_mutual_exclusive, category, label_name, ...rest }) =>
+      !is_mutual_exclusive &&
+      category == "session" &&
+      label_name.includes("Transition")
+  );
+  var lastTransitionAnnotation = getLastAnnotation(transitionAnnotations);
+  if (
+    lastTransitionAnnotation != undefined &&
+    lastTransitionAnnotation["stop_time"] == undefined
+  ) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+var getLastAnnotation = function (annotations) {
   return annotations.length > 0
     ? annotations[annotations.length - 1]
     : undefined;
@@ -66,5 +84,6 @@ export default {
   getMeAnnotations,
   getLastAnnotation,
   getVariationStatus,
-  isWarmUpOn
+  isWarmUpOn,
+  isInTransition
 };

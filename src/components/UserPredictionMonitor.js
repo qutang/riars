@@ -84,12 +84,15 @@ class UserPredictionMonitor extends React.Component {
       this.props.annotations
     );
 
+    const isInTransition = Annotation.isInTransition(this.props.annotations);
+
     const systemPrediction = lastPrediction.getTopN(1)[0];
     // decide when to auto beep to remind switching
     if (
       lastActivityAnnotation != undefined &&
       lastActivityAnnotation.label_name != "BREAK" &&
       lastActivityAnnotation.label_name != "SYNC" &&
+      !isInTransition &&
       variationStatus != false
     ) {
       console.log("annotation label:" + lastActivityAnnotation.label_name);
@@ -110,6 +113,10 @@ class UserPredictionMonitor extends React.Component {
         this.wrongPredictionCount = 0;
         // add switch annotation
         this.props.annotate({ name: "Switch", isMutualExclusive: false, category: 'session' }); // add start time
+        // auto add transition annotation, but should be turned off manually
+        this.props.annotate({
+          name: 'Transition', isMutualExclusive: false, category: 'session'
+        });
         // beep to switch when we detect 2 consecutive success predictions or 3 consecutive wrong predictions
         this.setState({
           beepOn: true
@@ -122,13 +129,6 @@ class UserPredictionMonitor extends React.Component {
             this.props.annotate({ name: "Switch", isMutualExclusive: false, category: 'session' }); // add end time
           }.bind(this)
         );
-        // this.voiceFeedback.playBeep(
-        //   function onBeepEnd() {
-        //     this.setState({
-        //       beepOn: false
-        //     });
-        //   }.bind(this)
-        // );
       } else {
         if (!this.voiceFiredForCurrentPrediction) {
           this.runVoiceFeedback(lastPrediction);
@@ -137,7 +137,9 @@ class UserPredictionMonitor extends React.Component {
     } else {
       this.correctPredictionCount = 0;
       this.wrongPredictionCount = 0;
-      if (!this.voiceFiredForCurrentPrediction) {
+      if (!this.voiceFiredForCurrentPrediction && lastActivityAnnotation.label_name != "BREAK" &&
+        lastActivityAnnotation.label_name != "SYNC" &&
+        !isInTransition) {
         this.runVoiceFeedback(lastPrediction);
       }
     }
@@ -301,6 +303,12 @@ class UserPredictionMonitor extends React.Component {
       name: "BREAK",
       isMutualExclusive: true,
       category: "activity",
+      annotate: this.props.annotate
+    });
+    labels.push({
+      name: "Transition",
+      isMutualExclusive: false,
+      category: "session",
       annotate: this.props.annotate
     });
     labels.push({
