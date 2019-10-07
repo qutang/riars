@@ -2387,10 +2387,10 @@ ansi-to-html@^0.6.11:
   dependencies:
     entities "^1.1.1"
 
-antd@^3.23.5:
-  version "3.23.5"
-  resolved "https://registry.yarnpkg.com/antd/-/antd-3.23.5.tgz#ee87cd742c9ac99c95e728aa948615108629af59"
-  integrity sha512-D4N10iocjLxpLBQB+9hNcTeWKsh+eM3uYcC/I2JQcmFcSPRyO9FJvORaN7LK8Vxo7McGhpxPObdygpXSaIlKQw==
+antd@^3.23.6:
+  version "3.23.6"
+  resolved "https://registry.yarnpkg.com/antd/-/antd-3.23.6.tgz#527733b423a23428d08d8e37a9fca60b6aec1651"
+  integrity sha512-pfcg59biySvAOyySq/xBv4dmJDFugxk+APrd0S8K6t2AGaICCtInLJZ1OPUEfwqi+E8LMvINvboT3odZmoWa8w==
   dependencies:
     "@ant-design/create-react-context" "^0.2.4"
     "@ant-design/icons" "~2.1.1"
@@ -10150,7 +10150,7 @@ sax@^1.2.4, sax@~1.2.4:
   resolved "https://registry.yarnpkg.com/sax/-/sax-1.2.4.tgz#2816234e2378bddc4e5354fab5caa895df7100d9"
   integrity sha512-NqVDv9TpANUjFm0N8uM5GxL36UgKi9/atZw+x7YFnQ8ckwFGKrl4xX4yWtrey3UJm5nP1kUbnYgLopqWNSRhWw==
 
-scheduler@^0.16.1, scheduler@^0.16.2:
+scheduler@^0.16.2:
   version "0.16.2"
   resolved "https://registry.yarnpkg.com/scheduler/-/scheduler-0.16.2.tgz#f74cd9d33eff6fc554edfb79864868e4819132c1"
   integrity sha512-BqYVWqwz6s1wZMhjFvLfVR5WXP7ZY32M/wYPo04CcuPM7XZEbV2TBNW7Z0UkguPTl0dWMA59VbNXxK6q+pHItg==
