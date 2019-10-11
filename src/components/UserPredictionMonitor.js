@@ -72,7 +72,7 @@ class UserPredictionMonitor extends React.Component {
   }
 
   decideFeedback(lastPrediction) {
-    
+
     let activityAnnotations = Annotation.getMeAnnotations(
       this.props.annotations,
       "activity"
@@ -84,12 +84,15 @@ class UserPredictionMonitor extends React.Component {
       this.props.annotations
     );
 
+    const isInTransition = Annotation.isInTransition(this.props.annotations);
+
     const systemPrediction = lastPrediction.getTopN(1)[0];
     // decide when to auto beep to remind switching
     if (
       lastActivityAnnotation != undefined &&
       lastActivityAnnotation.label_name != "BREAK" &&
       lastActivityAnnotation.label_name != "SYNC" &&
+      !isInTransition &&
       variationStatus != false
     ) {
       console.log("annotation label:" + lastActivityAnnotation.label_name);
@@ -108,6 +111,12 @@ class UserPredictionMonitor extends React.Component {
       ) {
         this.correctPredictionCount = 0;
         this.wrongPredictionCount = 0;
+        // add switch annotation
+        this.props.annotate({ name: "Switch", isMutualExclusive: false, category: 'session' }); // add start time
+        // auto add transition annotation, but should be turned off manually
+        this.props.annotate({
+          name: 'Transition', isMutualExclusive: false, category: 'session'
+        });
         // beep to switch when we detect 2 consecutive success predictions or 3 consecutive wrong predictions
         this.setState({
           beepOn: true
@@ -117,24 +126,20 @@ class UserPredictionMonitor extends React.Component {
             this.setState({
               beepOn: false
             });
+            this.props.annotate({ name: "Switch", isMutualExclusive: false, category: 'session' }); // add end time
           }.bind(this)
         );
-        // this.voiceFeedback.playBeep(
-        //   function onBeepEnd() {
-        //     this.setState({
-        //       beepOn: false
-        //     });
-        //   }.bind(this)
-        // );
       } else {
-        if(!this.voiceFiredForCurrentPrediction){
+        if (!this.voiceFiredForCurrentPrediction) {
           this.runVoiceFeedback(lastPrediction);
         }
       }
     } else {
       this.correctPredictionCount = 0;
       this.wrongPredictionCount = 0;
-      if(!this.voiceFiredForCurrentPrediction){
+      if (!this.voiceFiredForCurrentPrediction && lastActivityAnnotation.label_name != "BREAK" &&
+        lastActivityAnnotation.label_name != "SYNC" &&
+        !isInTransition) {
         this.runVoiceFeedback(lastPrediction);
       }
     }
@@ -144,7 +149,7 @@ class UserPredictionMonitor extends React.Component {
     this.inferenceDelay =
       this.state.currentTime -
       this.props.predictions[this.props.predictions.length - 1].stopTime;
-    
+
     this.setState({
       isPredicting: false
     });
@@ -154,8 +159,8 @@ class UserPredictionMonitor extends React.Component {
     let lastPrediction = this.props.predictions[
       this.props.predictions.length - 1
     ];
-    
-    if (this.props.predictions.length >= 3){
+
+    if (this.props.predictions.length >= 3) {
       this.decideFeedback(lastPrediction);
     }
   }
@@ -186,7 +191,7 @@ class UserPredictionMonitor extends React.Component {
           this.onVoiceFeedbackEnd();
         }
       },
-      function(error) {
+      function (error) {
         console.error(error);
         this.onVoiceFeedbackEnd();
       }
@@ -301,6 +306,12 @@ class UserPredictionMonitor extends React.Component {
       annotate: this.props.annotate
     });
     labels.push({
+      name: "Transition",
+      isMutualExclusive: false,
+      category: "session",
+      annotate: this.props.annotate
+    });
+    labels.push({
       name: "OUT_SCOPE",
       isMutualExclusive: false,
       category: "activity",
@@ -347,7 +358,7 @@ class UserPredictionMonitor extends React.Component {
           <AnnotationPanel
             labels={this.labels}
             annotations={this.props.annotations}
-            // annotate={this.props.annotate}
+          // annotate={this.props.annotate}
           />
         </>
       );
@@ -399,7 +410,7 @@ class UserPredictionMonitor extends React.Component {
         <AnnotationPanel
           labels={this.labels}
           annotations={this.props.annotations}
-          //   annotate={this.props.annotate}
+        //   annotate={this.props.annotate}
         />
       </>
     );
@@ -583,7 +594,7 @@ class UserPredictionMonitor extends React.Component {
                 this.props.predictions.length - 1
               ) +
                 1) *
-                380 +
+              380 +
               510
           }}
         >
