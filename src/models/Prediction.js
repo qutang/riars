@@ -59,6 +59,56 @@ class Prediction {
     };
   }
 
+  static getInstructionTexts(variationStatus) {
+    if (!variationStatus) {
+      return {}
+    } else if (variationStatus === 'Variation I') {
+      return {
+        BIKING: "but remain the same speed",
+        "WALKING AT 3-3.5 MPH": "but remain walking",
+        RUNNING: "running",
+        "WALKING AT 2 MPH": "but remain walking",
+        LYING: "but remain lying",
+        "SITTING STILL": "but remain sitting",
+        "SITTING AND USING A COMPUTER": "but remain sitting",
+        "SITTING AND WRITING": "but remain sitting",
+        "STANDING AND USING A COMPUTER": "but remain standing",
+        "STANDING AND WRITING": "but remain standing",
+        "WALKING AT 1 MPH": "but remain walking",
+        "FOLDING TOWELS": "but remain standing",
+        SWEEPING: "but remain standing",
+        "LOADING/UNLOADING SHELF": "but remain standing",
+        "WALKING DOWNSTAIRS": "but remain walking",
+        "WALKING UPSTAIRS": "but remain walking",
+        UNKNOWN: "unknown",
+        STRETCHING: "but remain standing",
+        "SELF-SELECTED FREE STANDING": "but keep still"
+      };
+    } else if (variationStatus === 'Variation II') {
+      return {
+        BIKING: "however you like",
+        "WALKING AT 3-3.5 MPH": "however you like",
+        RUNNING: "however you like",
+        "WALKING AT 2 MPH": "however you like",
+        LYING: "however you like",
+        "SITTING STILL": "however you like",
+        "SITTING AND USING A COMPUTER": "however you like",
+        "SITTING AND WRITING": "however you like",
+        "STANDING AND USING A COMPUTER": "however you like",
+        "STANDING AND WRITING": "however you like",
+        "WALKING AT 1 MPH": "however you like",
+        "FOLDING TOWELS": "however you like",
+        SWEEPING: "however you like",
+        "LOADING/UNLOADING SHELF": "however you like",
+        "WALKING DOWNSTAIRS": "however you like",
+        "WALKING UPSTAIRS": "however you like",
+        UNKNOWN: "unknown",
+        STRETCHING: "however you like",
+        "SELF-SELECTED FREE STANDING": "however you like"
+      };
+    }
+  }
+
   clone() {
     const predictionSet = this.prediction;
     const clonedPredictionSet = predictionSet.map(pr => {

@@ -6,6 +6,7 @@ import Annotation from "../models/Annotation";
 import VoiceFeedback from "../models/VoiceFeedback";
 import "./UserPredictionMonitor.css";
 import { get } from "http";
+import Prediction from "../models/Prediction";
 
 class UserPredictionMonitor extends React.Component {
   constructor(props) {
@@ -87,7 +88,7 @@ class UserPredictionMonitor extends React.Component {
     const isInTransition = Annotation.isInTransition(this.props.annotations);
 
     const systemPrediction = lastPrediction.getTopN(1)[0];
-    // decide when to auto beep to remind switching
+    // decide different feedbacks
     if (
       lastActivityAnnotation != undefined &&
       lastActivityAnnotation.label_name != "BREAK" &&
@@ -95,6 +96,7 @@ class UserPredictionMonitor extends React.Component {
       !isInTransition &&
       variationStatus != false
     ) {
+      // in 2nd or 3rd trial, not in transition, current annotation is an activity
       console.log("annotation label:" + lastActivityAnnotation.label_name);
       console.log("system prediction label:" + systemPrediction.label);
       if (lastActivityAnnotation.label_name === systemPrediction.label) {
@@ -109,6 +111,7 @@ class UserPredictionMonitor extends React.Component {
         this.wrongPredictionCount >= 3 ||
         this.correctPredictionCount + this.wrongPredictionCount >= 3
       ) {
+        // switch to a different variation
         this.correctPredictionCount = 0;
         this.wrongPredictionCount = 0;
         // add switch annotation
@@ -121,26 +124,35 @@ class UserPredictionMonitor extends React.Component {
         this.setState({
           beepOn: true
         });
-        this.voiceFeedback.playSwitch(
-          function onSwitchEnd() {
-            this.setState({
-              beepOn: false
-            });
-            this.props.annotate({ name: "Switch", isMutualExclusive: false, category: 'session' }); // add end time
-          }.bind(this)
-        );
+        // this.voiceFeedback.playSwitch(
+        //   function onSwitchEnd() {
+        //     this.setState({
+        //       beepOn: false
+        //     });
+        //     this.props.annotate({ name: "Switch", isMutualExclusive: false, category: 'session' }); // add end time
+        //   }.bind(this)
+        // );
+        // play do it differently feedback
+        var instructionTexts = Prediction.getInstructionTexts(variationStatus)
+        var extraText = instructionTexts[lastActivityAnnotation.label_name]
+        this.runVoiceInstruction("Now do it differently", extraText);
       } else {
+        //still in the same variation
         if (!this.voiceFiredForCurrentPrediction) {
-          this.runVoiceFeedback(lastPrediction);
+          // this.runVoiceFeedback(lastPrediction);
+          // play keep going feedback
+          this.runVoiceInstruction("Keep going", "");
         }
       }
     } else {
+      // first trial, only play keep going
       this.correctPredictionCount = 0;
       this.wrongPredictionCount = 0;
       if (!this.voiceFiredForCurrentPrediction && lastActivityAnnotation.label_name != "BREAK" &&
         lastActivityAnnotation.label_name != "SYNC" &&
         !isInTransition) {
-        this.runVoiceFeedback(lastPrediction);
+        // this.runVoiceFeedback(lastPrediction);
+        this.runVoiceInstruction("Keep going", "")
       }
     }
   }
@@ -171,6 +183,15 @@ class UserPredictionMonitor extends React.Component {
     });
   }
 
+  onInstructionEnd() {
+    this.setState({
+      voiceOn: false
+    });
+    this.setState({
+      beepOn: false
+    })
+  }
+
   componentDidMount() {
     this.selectedProcessor = this.props.processors.filter(p => p.selected)[0];
     this.setState({
@@ -181,6 +202,14 @@ class UserPredictionMonitor extends React.Component {
         currentTime: new Date().getTime() / 1000.0
       });
     }, 1000);
+  }
+
+  runVoiceInstruction(text, extraText) {
+    this.voiceFiredForCurrentPrediction = true;
+    this.voiceFeedback.speakInstruction(text + ', ' + extraText, this.onInstructionEnd.bind(this));
+    this.setState({
+      voiceOn: true
+    });
   }
 
   runVoiceFeedback(currentPrediction) {

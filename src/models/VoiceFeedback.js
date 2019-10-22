@@ -62,7 +62,7 @@ class VoiceFeedback {
     console.log(this);
     var vf = this;
     console.log(vf);
-    var speechPromise = function(resolve, reject) {
+    var speechPromise = function (resolve, reject) {
       console.log(vf);
       if (vf._voice == undefined) {
         console.warn("voice list is not loaded");
@@ -77,7 +77,11 @@ class VoiceFeedback {
   }
 
   playSwitch(onSwitchEnd) {
-    const switchHowler = this._speak("Switch", 1.0, onSwitchEnd)
+    this._speak("Switch", 1.0, onSwitchEnd)
+  }
+
+  playKeepGoing(onPlayEnd) {
+    this._speak("Keep going", 1.0, onPlayEnd);
   }
 
   playBeep(onBeepEnd) {
@@ -107,6 +111,10 @@ class VoiceFeedback {
     return this.speakPredictionSets(predictionSets);
   }
 
+  speakInstruction(text, onInstructionEnd) {
+    this._speak(text, 1.0, onInstructionEnd);
+  }
+
   _playNext(event) {
     if (this._voiceTexts.length > 0) {
       this._elapsedTime =
@@ -119,8 +127,8 @@ class VoiceFeedback {
     } else {
       console.log(
         "Finished playing all texts, spent " +
-          this._elapsedTime / 1000.0 +
-          " seconds"
+        this._elapsedTime / 1000.0 +
+        " seconds"
       );
       this._resolve(true);
     }
@@ -132,7 +140,7 @@ class VoiceFeedback {
     synUtterance.text = text;
     synUtterance.voice = this._voice;
     synUtterance.volume = volume;
-    synUtterance.rate = 1;
+    synUtterance.rate = 0.85;
     synUtterance.addEventListener("end", onVoiceEnd);
     this._synth.speak(synUtterance);
   }
