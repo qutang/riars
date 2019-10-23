@@ -31,7 +31,7 @@
     "jest": "^24.9.0",
     "mocha": "^6.2.2",
     "mocha-loader": "^3.0.0",
-    "react-test-renderer": "^16.10.2",
+    "react-test-renderer": "^16.11.0",
     "style-loader": "^1.0.0",
     "webpack": "^4.41.2",
     "webpack-cli": "^3.3.9",
