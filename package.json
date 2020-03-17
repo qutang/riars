@@ -14,7 +14,7 @@
     "react": "^16.11.0",
     "react-chartjs-2": "^2.8.0",
     "react-dom": "^16.11.0",
-    "react-hot-loader": "^4.12.15"
+    "react-hot-loader": "^4.12.20"
   },
   "devDependencies": {
     "@babel/cli": "^7.6.4",
