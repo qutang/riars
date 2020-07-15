@@ -30,18 +30,17 @@
   resolved "https://registry.yarnpkg.com/@ant-design/icons/-/icons-2.1.1.tgz#7b9c08dffd4f5d41db667d9dbe5e0107d0bd9a4a"
   integrity sha512-jCH+k2Vjlno4YWl6g535nHR09PwCEmTBKAG6VqF+rhkrSPRLfgpU2maagwbZPLjaHuU5Jd1DFQ2KJpQuI6uG8w==
 
-"@babel/cli@^7.6.4":
-  version "7.6.4"
-  resolved "https://registry.yarnpkg.com/@babel/cli/-/cli-7.6.4.tgz#9b35a4e15fa7d8f487418aaa8229c8b0bc815f20"
-  integrity sha512-tqrDyvPryBM6xjIyKKUwr3s8CzmmYidwgdswd7Uc/Cv0ogZcuS1TYQTLx/eWKP3UbJ6JxZAiYlBZabXm/rtRsQ==
+"@babel/cli@^7.10.5":
+  version "7.10.5"
+  resolved "https://registry.yarnpkg.com/@babel/cli/-/cli-7.10.5.tgz#57df2987c8cf89d0fc7d4b157ec59d7619f1b77a"
+  integrity sha512-j9H9qSf3kLdM0Ao3aGPbGZ73mEA9XazuupcS6cDGWuiyAcANoguhP0r2Lx32H5JGw4sSSoHG3x/mxVnHgvOoyA==
   dependencies:
-    commander "^2.8.1"
+    commander "^4.0.1"
     convert-source-map "^1.1.0"
     fs-readdir-recursive "^1.1.0"
     glob "^7.0.0"
-    lodash "^4.17.13"
-    mkdirp "^0.5.1"
-    output-file-sync "^2.0.0"
+    lodash "^4.17.19"
+    make-dir "^2.1.0"
     slash "^2.0.0"
     source-map "^0.5.0"
   optionalDependencies:
@@ -3472,10 +3471,15 @@ commander@2.17.x:
   resolved "https://registry.yarnpkg.com/commander/-/commander-2.17.1.tgz#bd77ab7de6de94205ceacc72f1716d29f20a77bf"
   integrity sha512-wPMUt6FnH2yzG95SA6mzjQOEKUU3aLaDEmzs1ti+1E9h+CsrZghRlqEM/EJ4KscsQVG8uNN4uVreUeT8+drlgg==
 
-commander@^2.19.0, commander@^2.20.0, commander@^2.8.1, commander@~2.20.3:
+commander@^2.19.0, commander@^2.20.0, commander@~2.20.3:
   version "2.20.3"
   resolved "https://registry.yarnpkg.com/commander/-/commander-2.20.3.tgz#fd485e84c03eb4881c20722ba48035e8531aeb33"
   integrity sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ==
+
+commander@^4.0.1:
+  version "4.1.1"
+  resolved "https://registry.yarnpkg.com/commander/-/commander-4.1.1.tgz#9fd602bd936294e9e9ef46a3f4d6964044b18068"
+  integrity sha512-NOKm8xhkzAjzFx8B2v5OAHT+u5pRQc2UCa2Vq9jYL/31o2wi9mxBA7LIFs3sV5VSC49z6pEhfbMULvShKj26WA==
 
 commander@~2.19.0:
   version "2.19.0"
@@ -6013,7 +6017,7 @@ is-path-inside@^2.1.0:
   dependencies:
     path-is-inside "^1.0.2"
 
-is-plain-obj@^1.0.0, is-plain-obj@^1.1.0:
+is-plain-obj@^1.0.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/is-plain-obj/-/is-plain-obj-1.1.0.tgz#71a50c8429dfca773c92a390a4a03b39fcd51d3e"
   integrity sha1-caUMhCnfync8kqOQpKA7OfzVHT4=
@@ -6855,10 +6859,10 @@ lodash.throttle@^4.0.0, lodash.throttle@^4.1.1:
   resolved "https://registry.yarnpkg.com/lodash.throttle/-/lodash.throttle-4.1.1.tgz#c23e91b710242ac70c37f1e1cda9274cc39bf2f4"
   integrity sha1-wj6RtxAkKscMN/HhzaknTMOb8vQ=
 
-lodash@^4.16.5, lodash@^4.17.11, lodash@^4.17.12, lodash@^4.17.13, lodash@^4.17.14, lodash@^4.17.15, lodash@^4.17.3, lodash@^4.17.4, lodash@^4.17.5:
-  version "4.17.15"
-  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.15.tgz#b447f6670a0455bbfeedd11392eff330ea097548"
-  integrity sha512-8xOcRHvCjnocdS5cpwXQXVzmmh5e5+saE2QGoeQmbKmRS6J3VQppPOIt0MnmE+4xlZoumy0GPG0D0MVIQbNA1A==
+lodash@^4.16.5, lodash@^4.17.11, lodash@^4.17.12, lodash@^4.17.13, lodash@^4.17.14, lodash@^4.17.15, lodash@^4.17.19, lodash@^4.17.3, lodash@^4.17.4, lodash@^4.17.5:
+  version "4.17.19"
+  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.19.tgz#e48ddedbe30b3321783c5b4301fbd353bc1e4a4b"
+  integrity sha512-JNvd8XER9GQX0v2qJgsaN/mzFCNA5BRe/j8JN9d+tWyGLSodKQHKFicdwNYzWwI3wjRnaKPsGj1XkBjx/F96DQ==
 
 log-symbols@2.2.0:
   version "2.2.0"
@@ -7795,15 +7799,6 @@ osenv@^0.1.4:
   dependencies:
     os-homedir "^1.0.0"
     os-tmpdir "^1.0.0"
-
-output-file-sync@^2.0.0:
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/output-file-sync/-/output-file-sync-2.0.1.tgz#f53118282f5f553c2799541792b723a4c71430c0"
-  integrity sha512-mDho4qm7WgIXIGf4eYU1RHN2UU5tPfVYVSRwDJw0uTmj35DQUt/eNp19N7v6T3SrR0ESTEf2up2CGO73qI35zQ==
-  dependencies:
-    graceful-fs "^4.1.11"
-    is-plain-obj "^1.1.0"
-    mkdirp "^0.5.1"
 
 p-defer@^1.0.0:
   version "1.0.0"
